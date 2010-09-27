@@ -95,6 +95,7 @@ def predeploy():
         api.sudo("ls  %(path)s/bin/buildout " % locals(), pty=True)
     except:
         hostout.bootstrap()
+        hostout.setowners()
     
 
     api.env.cwd = api.env.path
@@ -188,10 +189,10 @@ def uploadbuildout():
         #sudo('chown $(effectiveuser) %s' % tgt)
 
 
-    effectiveuser=hostout.options['effective-user']
+    user=hostout.options['buildout-user']
     install_dir=hostout.options['path']
     api.run('tar --no-same-permissions --no-same-owner --overwrite '
-         '--owner %(effectiveuser)s -xvf %(tgt)s '
+         '--owner %(user)s --mode u+rw,g+r-w,o-rw -xvf %(tgt)s '
          '--directory=%(install_dir)s' % locals())
     
 @buildoutuser
