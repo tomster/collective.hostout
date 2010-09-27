@@ -469,7 +469,14 @@ class Packages:
 	localdist_dir = tempfile.mkdtemp()
 	
         #eggs = self.getDistEggs()
-	eggs = os.listdir(self.dist_dir)
+	from setuptools.package_index import interpret_distro_name
+	for path in os.listdir(self.dist_dir):
+	    #path = os.path.join(self.dist_dir, path)
+	    for dist in interpret_distro_name(self.dist_dir, path, None):
+		    #import pdb; pdb.set_trace()
+		    pass
+		
+	    #egg = pkg_resources.find_distributions(path, only=False)
 
         donepackages = []
         ids = {}
@@ -485,15 +492,17 @@ class Packages:
             path = os.path.abspath(path)
             dist = find_distributions(path)
 	    egg = None
-            if len(dist):
-                dist = dist[0]
-		for file in eggs:
-		    if file.count(hash):
-			egg = os.path.join(self.dist_dir, file)
-			break
-	    if egg:
+            #if len(dist):
+            #    dist = dist[0]
+	#	for file in eggs:
+	#	    if file.count(hash):
+	#		egg = os.path.join(self.dist_dir, file)
+	#		break
+	    if False and egg:
 		#HACK should get out of zip file
 		version = dist.version
+		if 'collective.recipe.filestorage' in dist.project_name:
+		    import pdb; pdb.set_trace()
 		version += 'dev' not in dist.version and 'dev' or ''
 		version += hash not in dist.version and '-'+hash or ''
 		self.local_eggs[dist.project_name] = (dist.project_name, version, egg)
