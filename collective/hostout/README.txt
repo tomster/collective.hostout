@@ -1,12 +1,32 @@
 
+Overview
+********
 
-Installing hostout
-******************
+Hostout is a framework for managing remote buildouts via fabric scripts. It includes
+many helpful builtin commands to package, deploy and bootstrap a remote server
+with based on your local buildout.
 
-First follow the instructions and to get your development buildout running on your development machine.
-You can add this recipe to a buildout for Plone, django or any other buildout based environment.
+Adding your own commands
+************************
 
-Add the collective.hostout part to your development buildout.
+Hostout uses fabric files. Fabric is any easy way to write python that
+colls commands on a host over ssh. Here is a basic fabfile which will echo
+two variables on the remote server.
+
+
+>>> write('fabfile.py',"""
+...
+... from fabric import api
+...
+... def echo(cmdline1):
+...    option1 = api.env.option1
+...    run("echo '%s %s'" % (option1, cmdline1) )
+...
+... """)
+
+Using hostout we can predefine some of the fabric settings as well as install
+the fabric runner by using hostout. Each hostout part in your buildout.cfg
+represents a connection to a server at a given path.
 
 >>> write('buildout.cfg',
 ... """
@@ -16,28 +36,59 @@ Add the collective.hostout part to your development buildout.
 ... [host1]
 ... recipe = collective.hostout
 ... host = 127.0.0.1:10022
+... fabfiles = fabfile.py
+... option1 = buildout
 ... user = root
 ... password = root
-... path = /usr/local/plone/host1
-... """ % globals())
+... path = /var/host1
+...
+... """ )
 
 If you don't include your password you will be prompted for it later.    
-    
-Next rerun your buildout to install the hostout script in your buildout bin directory
+
+When we run buildout a special fabric runner will be installed called bin/hostout
 
 >>> print system('bin/buildout -N')
 Installing host1.
 Generated script '/sample-buildout/bin/hostout'.
 
-The generated script is run with a command and host(s) as arguments
 
 >>> print system('bin/hostout')
 cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
 Valid hosts are: host1
 
+We can run our fabfile by providing the
 
-Each host refers to the name of a part with recipe=collective.hostout in your buildout.
-Each host corresponds to a host and remote path which is the default location for commands to act on.
+ - host which refers to the part name name in
+ buildout.cfg.
+ 
+ - command which refers to the method name in the fabfile
+ 
+ - any other options we want to pass to the command
+ 
+Note: We can run multiple commands on one or more hosts using a single commandline.
+
+In our example
+
+>>> print system('bin/hostout host1 echo "is cool"')
+Hostout: Running command 'echo' from 'fabfile.py'
+Logging into the following hosts as root:
+    127.0.0.1
+[127.0.0.1] run: echo 'cd /var/host1 && buildout is cool'
+[127.0.0.1] out: ...
+Done.
+
+Note that we combined information from our buildout with
+commandline paramaters to determine the exact command sent
+to our server.
+
+
+Buildin Commands
+****************
+
+Hostout comes with a set of helpful commands. You can show this list by
+not specifying any command at all. The list of commands will vary depending
+on what fabfiles your hostout references.
 
 >>> print system('bin/hostout host1')
 cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
@@ -47,7 +98,7 @@ Valid commands are:
    deploy           : predeploy, uploadeggs, uploadbuildout, buildout and then postdeploy
    postdeploy       : Perform any final plugin tasks
    predeploy        : Install buildout and its dependencies if needed. Hookpoint for plugins
-   setaccess        : setup password access for users 
+   setupusers       : create buildout and the effective user and allow hostout access
    setowners        : Ensure ownership and permissions are correct on buildout and cache
    run              : Execute cmd on remote as login user
    sudo             : Execute cmd on remote as root user
@@ -55,14 +106,79 @@ Valid commands are:
    uploadeggs       : Any develop eggs are released as eggs and uploaded to the server
 <BLANKLINE>
 
+The run command is helpful to run quick remote commands as the buildout user on the remote host
 
 >>> print system('bin/hostout host1 run pwd')
-Hostout: Running command 'run' from '.../fabfile.py'
+Hostout: Running command 'run' from collective.hostout
 Logging into the following hosts as root:
     127.0.0.1
-[127.0.0.1] run: sh -c "cd /usr/local/plone/host1 && pwd"
+[127.0.0.1] run: sh -c "cd /var/host1 && pwd"
 [127.0.0.1] out: CMD RECIEVED
 Done.
+
+We can also use our login user and password to run quick sudo commands
+
+>>> print system('bin/hostout host1 sudo cat /etc/hosts')
+Hostout: Running command 'sudo' from collective.hostout
+Logging into the following hosts as root:
+    127.0.0.1
+[127.0.0.1] run: sh -c "cd /var/host1 && cat/etc/hosts"
+[127.0.0.1] out: CMD RECIEVED
+Done.
+
+Hostout, users and logins
+*************************
+
+#TODO
+
+effective-user
+  This user will own the buildouts var files. This allows the application to write to database files
+  in the var directory but not be allowed to write to any other part of teh buildout code.
+  
+buildout-user
+  The user which will own the buildout files. During bootstrap this user will be created and be given a ssh key
+  such that hostout can login and run buildout using this account.
+
+buildout-group
+  A group which will own the buildout files including the var files. This group is created if needed in the bootstrap
+  command.
+  
+Making a fabric plugin
+**********************
+
+It can be very helpful to package up our fabfiles for others to use.
+
+#TODO Example of echo plugin
+
+Hostout plugins are setuptools packages that have a zc.buildout recipe
+and a fabfile. The recipe is used to set defaults which will later get passed
+into the fabric environment.
+The fabric fabfile has to have an entrypoint in your setup.py file so hostout
+can find it. e.g.
+
+>>>    entry_points = {'zc.buildout': ['default = collective.hostout:Recipe',],
+...                    'fabric': ['fabfile = collective.hostout.fabfile']
+...                    },
+
+  
+  
+Using fabric plugins
+********************
+
+You use commands others have made via the extends option.
+Name a buildout recipe egg in the extends option and buildout will download
+and merge any fabfiles and other configuration options from that recipe into
+your current hostout configuration. The following are examples of builtin
+plugins others are available on pypi.
+
+see hostout.cloud_, hostout.supervisor_, hostout.ubuntu_ or
+hostout.mrdeveloper for examples.
+
+.. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
+.. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
+.. _hostout.ubuntu: http://pypi.python.org/pypi/hostout.ubuntu
+
+
 
 Definitions
 ***********
@@ -282,70 +398,6 @@ python-version
   used in the local buildout. (UNIMPLIMENTED) 
 
 
-Using command plugins
-*********************
-
-You use commands others have made via the extends option.
-Name a buildout recipe egg in the extends option and buildout will download
-and merge any fabfiles and other configuration options from that recipe into
-your current hostout configuration. The following are examples of builtin
-plugins others are available on pypi.
-
-see hostout.cloud_, hostout.supervisor_, hostout.ubuntu_ or
-hostout.mrdeveloper for examples.
-
-.. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
-.. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
-.. _hostout.ubuntu: http://pypi.python.org/pypi/hostout.ubuntu
-
-
-Adding your own commands
-************************
-
-Hostout uses fabric files. Fabric is any easy way to write python that
-colls commands on a host over ssh. You can create your own fabric files as follows:
-
-
->>> write('fabfile.py',"""
-... def echo(cmdline1):
-...    hostout = get('hostout')
-...    bin = "%s/bin" % hostout.getRemoteBuildoutPath()
-...    option1 = hostout.options['option1']
-...    run("echo '%s %s'" % (option1, cmdline1) )
-... """)
-
-Reference this file in the fabfiles option of your hostout part.
-
->>> write('buildout.cfg',
-... """
-... [buildout]
-... parts = host1
-...
-... [host1]
-... recipe = collective.hostout
-... host = 127.0.0.1:10022
-... fabfiles = fabfile.py
-... option1 = buildout
-... user = root
-... password = root
-...
-... """ )
-
->>> print system('bin/buildout -N')
-Uninstalling host1.
-Uninstalling example.
-Uninstalling _mr.developer.
-Installing host1.
-
-
->>> print system('bin/hostout host1 echo "is cool"')
-Hostout: Running command 'echo' from 'fabfile.py'
-Logging into the following hosts as root:
-    127.0.0.1
-[127.0.0.1] run: echo 'buildout is cool'
-[127.0.0.1] out: CMD RECIEVED
-Done.
-
 
 
 Sharing hostout options
@@ -398,19 +450,6 @@ between multiple hostout definitions
 
 #>>> print system('bin/hostout deploy')
 Invalid hostout hostouts are: prod staging
-
-Making a hostout plugin
-***********************
-
-Hostout plugins are setuptools packages that have a zc.buildout recipe
-and a fabfile. The recipe is used to set defaults which will later get passed
-into the fabric environment.
-The fabric fabfile has to have an entrypoint in your setup.py file so hostout
-can find it. e.g.
-
->>>    entry_points = {'zc.buildout': ['default = collective.hostout:Recipe',],
-...                    'fabric': ['fabfile = collective.hostout.fabfile']
-...                    },
 
 
 
