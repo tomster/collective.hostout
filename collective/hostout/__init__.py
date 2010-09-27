@@ -32,7 +32,7 @@ class Recipe:
         #self.egg = zc.recipe.egg.Egg(buildout, options['recipe'], options)
         
         self.name, self.options, self.buildout = name, options, buildout
-
+        
         if not buildout['buildout'].get('hostout-main'):
             buildout['buildout']['hostout-main'] = name
             options['mainhostout'] = self.name
@@ -116,7 +116,7 @@ class Recipe:
                 self.extends(part, seen)
                 for key in part:
                     if key in ['fabfiles', 'pre-commands', 'post-commands']:
-                        fabfiles = part[key].split()
+                        fabfiles = part[key].split('\n')
                         self.options[key] = '\n'.join(self.options.get(key, '').split()+fabfiles)
                     elif key not in self.options.keys():
                         self.options[key] = part[key]
@@ -209,12 +209,16 @@ class Recipe:
 
         for part in [p.strip() for p in self.buildout['buildout'].get('parts','').split()]:
             options = self.buildout.get(part) #HACK
-            if options is None or not options.get('recipe'):
+            
+            if options is None:
                 continue
-            try:
-                recipe,subrecipe = options['recipe'].split(':')
-            except:
-                recipe=options['recipe']
+            if not 'recipe' in options.keys():
+                continue
+            recipe = options.get('recipe',None)
+            if recipe is None:
+                continue
+            elif ':' in recipe:
+                recipe,subrecipe = recipe.split(':')
             recipes.append((part,recipe,options))
         return recipes
 
