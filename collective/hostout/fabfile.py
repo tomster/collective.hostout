@@ -137,15 +137,24 @@ extra_options +=
 
 
 def bootstrap():
-    api.env.hostout.setupusers()
-    api.env.hostout.setowners()
+#    api.env.hostout.setupusers()
 
     # bootstrap assumes that correct python is already installed
+    path = api.env.path
+    buildout = api.env['buildout-user']
+    buildoutgroup = api.env['buildout-group']
+    api.sudo('mkdir -p %(path)s' % locals())
+    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s %(path)s'%locals())
+
+    buildoutcache = api.env['buildout-cache']
+    api.sudo('mkdir -p %s/eggs' % buildoutcache)
+    api.sudo('mkdir -p %s/downloads/dist' % buildoutcache)
+    api.sudo('mkdir -p %s/extends' % buildoutcache)
+    api.sudo('chown -R %s:%s %s' % (buildout, buildoutgroup, buildoutcache))
     api.env.cwd = api.env.path
-    
+   
     bootstrap = resource_filename(__name__, 'bootstrap.py')
-    
-    api.put(bootstrap, '%(path)s/bootstrap.py')
+    api.put(bootstrap, '%s/bootstrap.py' % path)
     
     # put in simplest buildout to get bootstrap to run
     api.sudo('echo "[buildout]" > buildout.cfg')
@@ -154,11 +163,7 @@ def bootstrap():
     major = '.'.join(version.split('.')[:2])
 
     api.sudo('python%(major)s bootstrap.py --distribute' % locals())
-    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s python%(major)s '%locals())
-    
-    
-    
-    
+    api.env.hostout.setowners()
 
 def bootstrapsource():
     path = api.env.path
@@ -167,8 +172,7 @@ def bootstrapsource():
         return
     except:
         pass
-    
-    hostout = api.env.hostout
+
     hostout = api.env.get('hostout')
     buildout = api.env['buildout-user']
     effective = api.env['effective-user']
@@ -290,9 +294,8 @@ def uploadbuildout():
 
     user=hostout.options['buildout-user']
     install_dir=hostout.options['path']
-    api.run('tar --no-same-permissions --no-same-owner --overwrite '
-         '--owner %(user)s --mode u+rw,g+r-w,o-rw -xvf %(tgt)s '
-         '--directory=%(install_dir)s' % locals())
+    with cd(install_dir):
+        api.run('tar -p -xvf %(tgt)s' % locals())
     
 @buildoutuser
 def buildout():

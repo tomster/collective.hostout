@@ -13,6 +13,7 @@
 ##############################################################################
 
 import os
+import md5
 import shutil, tempfile
 import socket
 
@@ -20,7 +21,6 @@ import zc.buildout
 import tarfile
 import ConfigParser
 import sys
-from hashlib import md5
 from itertools import chain
 import re
 from paramiko import RSAKey
