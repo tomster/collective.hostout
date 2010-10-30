@@ -501,8 +501,8 @@ class Packages:
 	    if False and egg:
 		#HACK should get out of zip file
 		version = dist.version
-		if 'collective.recipe.filestorage' in dist.project_name:
-		    import pdb; pdb.set_trace()
+		#if 'collective.recipe.filestorage' in dist.project_name:
+		#    import pdb; pdb.set_trace()
 		version += 'dev' not in dist.version and 'dev' or ''
 		version += hash not in dist.version and '-'+hash or ''
 		self.local_eggs[dist.project_name] = (dist.project_name, version, egg)
