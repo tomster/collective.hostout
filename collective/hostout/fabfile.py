@@ -3,6 +3,8 @@ import os.path
 from fabric import api, contrib
 from collective.hostout.hostout import buildoutuser
 from fabric.context_managers import cd
+import collective.hostout.bootstrap
+from pkg_resources import resource_filename
 
 
 def setupusers():
@@ -132,6 +134,31 @@ extra_options +=
     --enable-unicode=ucs4
       
 """
+
+
+def bootstrap():
+    api.env.hostout.setupusers()
+    api.env.hostout.setowners()
+
+    # bootstrap assumes that correct python is already installed
+    api.env.cwd = api.env.path
+    
+    bootstrap = resource_filename(__name__, 'bootstrap.py')
+    
+    api.put(bootstrap, '%(path)s/bootstrap.py')
+    
+    # put in simplest buildout to get bootstrap to run
+    api.sudo('echo "[buildout]" > buildout.cfg')
+
+    version = api.env['python-version']
+    major = '.'.join(version.split('.')[:2])
+
+    api.sudo('python%(major)s bootstrap.py --distribute' % locals())
+    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s python%(major)s '%locals())
+    
+    
+    
+    
 
 def bootstrapsource():
     path = api.env.path
