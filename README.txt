@@ -9,15 +9,12 @@ deploy your first site in minutes. Hostout is compatible with Plone, django, or 
 buildout based environment.
     
 Hostout is a zc.buildout recipe_
-Hostout generates a script which logs into your remote host(s) and performs preset and customizable commands. e.g.
+Hostout generates a script which logs into your remote host(s) and performs preset and customizable commands. e.g.::
 
-$ bin/hostout productionserver deploy
-
-$ bin/hostout server1 server2 supervisorctl restart instance1
-
-$ bin/hostout all cmd ls -al
-
-$ bin/hostout staging mylocalfabriccommand
+  $ bin/hostout productionserver deploy
+  $ bin/hostout server1 server2 supervisorctl restart instance1
+  $ bin/hostout all cmd ls -al
+  $ bin/hostout staging mylocalfabriccommand
 
 How does it do that?
 ********************
@@ -27,6 +24,7 @@ builtin commands to help you bootstrap and deploy your buildout to remote hosts.
 
 Why is hostout awesome?
 ***********************
+
 Managing multiple environments can be a real pain and a barrier to development.
 Hostout puts all of the settings for all of your environments in an easy-to-manage format.
 
