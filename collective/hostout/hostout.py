@@ -116,6 +116,9 @@ class HostOut:
         self.user = opt.get('user')
         self.password = opt.get('password')
         self.identityfile = opt.get('identity-file')
+        shell =  opt.get('shell')
+        if shell is not None:
+            api.env.shell = shell
         self.start_cmd = opt.get('post-commands')
         self.stop_cmd = opt.get('pre-commands')
         self.extra_config = opt.get('include')
