@@ -1,0 +1,32 @@
+Todo list
+*********
+
+- import fabfiles so they don't produce warnings
+
+- fix bug that packages every egg during hostout
+
+- fix tests
+
+- finish bootstrap from source that works on any kind of linux
+
+- use decorators for picking user for commands instead of initcommand hack
+
+- implement super to properly support inheritance and scope for command plugins
+
+- plugins for database handling including backing up, moving between development, staging and production
+  regardless of location.
+  
+- Integrate with SCM to tag all parts so deployments can be rolled back.
+
+- Handle basic rollback when no SCM exists, for instance when buildout fails. For instance
+  make a log file of each deployment including all versions that were deployed. Version each buildout.cfg
+  sent to the server so as long as the egg cache is the same, you can rerun an old buildout
+
+- Help deploy DNS settings, possibly by hosting company specific plugins
+
+- Incorporate unified installer environment setup scripts directly.
+
+- Support firewalled servers by an optional tunnel back to a client side web proxy. Would also make
+   more reliable
+
+- Explore ways to make an even easier transition from default plone install to fully hosted site.
