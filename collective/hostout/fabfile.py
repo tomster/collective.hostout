@@ -3,7 +3,6 @@ import os.path
 from fabric import api, contrib
 from collective.hostout.hostout import buildoutuser
 from fabric.context_managers import cd
-import collective.hostout.bootstrap
 from pkg_resources import resource_filename
 
 
