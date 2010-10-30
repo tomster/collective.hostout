@@ -2,17 +2,17 @@
 Overview
 ********
 
-Hostout is a framework for managing remote buildouts via fabric scripts. It includes
-many helpful builtin commands to package, deploy and bootstrap a remote server
-with based on your local buildout.
+Hostout is a framework for managing remote buildouts via fabric scripts. It
+includes many helpful builtin commands to package, deploy and bootstrap a
+remote server with based on your local buildout.
 
-Hostout uses fabric files. Fabric is any easy way to write python that
-colls commands on a host over ssh.
+Hostout uses fabric files. Fabric is an easy way to write python that
+calls commands on a host over ssh.
 
 Hostout is built around two ideas :-
 
 1. Sharing Fabric command configuration amongst developers in a team
-so where and how your applications is deployed becomes configuration not
+so where and how your applications is deployed becomes configuration, not
 documentation. Deployment then becomes a single action by any member of the team.
 
 2. Sharing fabric scripts via PyPi so we don't have to reinvent ways
@@ -24,13 +24,13 @@ How?
 Combining Fabric and buildout
 *****************************
 
-Here is a basic fabfile which will echo
-two variables on the remote server.
+Here is a basic fabfile which will echo two variables on the remote server.
 
 
 >>> write('fabfile.py',"""
 ...
 ... from fabric import api
+... from fabric.api import run
 ...
 ... def echo(cmdline1):
 ...    option1 = api.env.option1
@@ -39,8 +39,7 @@ two variables on the remote server.
 ... """)
 
 Using hostout we can predefine some of the fabric scripts parameters
-as well as install
-the fabric runner by using hostout. Each hostout part in your buildout.cfg
+as well as install the fabric runner. Each hostout part in your buildout.cfg
 represents a connection to a server at a given path.
 
 >>> write('buildout.cfg',
@@ -74,8 +73,7 @@ Valid hosts are: host1
 
 We can run our fabfile by providing the
 
- - host which refers to the part name name in
- buildout.cfg.
+ - host which refers to the part name in buildout.cfg.
  
  - command which refers to the method name in the fabfile
  
@@ -145,8 +143,8 @@ Using fabric plugins
 You use commands others have made via the extends option.
 Name a buildout recipe egg in the extends option and buildout will download
 and merge any fabfiles and other configuration options from that recipe into
-your current hostout configuration. The following are examples of builtin
-plugins others are available on pypi.
+your current hostout configuration.  The following are examples of builtin
+plugins.  Others are available on pypi.
 
 see hostout.cloud_, hostout.supervisor_, hostout.ubuntu_ or
 hostout.mrdeveloper for examples.
@@ -157,7 +155,7 @@ hostout.mrdeveloper for examples.
 
 
 
-Buildin Commands
+Builtin Commands
 ****************
 
 Hostout comes with a set of helpful commands. You can show this list by
