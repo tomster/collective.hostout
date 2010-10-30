@@ -88,8 +88,8 @@ def get_all_extends(cfgfile):
 class DistributionGenerationException(Exception):
     def __init__(self, path, args):
         self.path = path
-	self.args = args
-	
+        self.args = args
+        
     def __str__(self):
         return  "Error releasing egg at %s: No egg found after \n python setup.py %s" % (self.path, self.args)
 
@@ -102,17 +102,17 @@ class HostOut:
         self.packages = packages
         self.hostout_package = None
         self.options = opt
-	self.hostouts = hostouts
+        self.hostouts = hostouts
 
         self.name = name
         self.remote_dir = opt.setdefault('path', '/var/lib/plone/%s'%name)
-	try:
-	    self.host, self.port = opt['host'].split(':')
-	    self.port = int(self.port)
-	except:
+        try:
+            self.host, self.port = opt['host'].split(':')
+            self.port = int(self.port)
+        except:
             self.host = opt.get('host')
-	    self.port = 22
-	    
+            self.port = 22
+            
         self.user = opt.get('user')
         self.password = opt.get('password')
         self.identityfile = opt.get('identity-file')
@@ -126,7 +126,7 @@ class HostOut:
         self.versions_part = opt.get('versions','versions')
         self.parts = [p.strip() for p in opt.get('parts','').split() if p.strip()]
         self.buildout_cache = opt.get('buildout-cache','')
-	opt['download_cache']= "%s/%s" % (self.buildout_cache, 'downloads')
+        opt['download_cache']= "%s/%s" % (self.buildout_cache, 'downloads')
         if not self.buildout_cache:
             install_base = os.path.dirname(self.getRemoteBuildoutPath())
             self.buildout_cache = os.path.join(install_base,'buildout-cache')
@@ -139,7 +139,7 @@ class HostOut:
         #if not os.path.exists(dist_dir):
         #    os.makedirs(dist_dir)
         #self.tar = None
-	self.sets = []
+        self.sets = []
 
     def getHostoutFile(self):
         #make sure package has generated
@@ -231,7 +231,7 @@ class HostOut:
 
     def getIdentityKey(self):
         keyfile = os.path.abspath(os.path.join(self.getLocalBuildoutPath(),'hostout_rsa'))
-	keyfile = self.options.get('identity-file', keyfile)
+        keyfile = self.options.get('identity-file', keyfile)
         if not os.path.exists(keyfile):
             key = RSAKey.generate(1024)
             key.write_private_key_file(keyfile)
@@ -269,13 +269,13 @@ class HostOut:
             self.user=opt.get('user','root')
 
     def allcmds(self):
-	if self.sets:
-	    return self._allcmds
-	self.sets.extend( findfabfiles() )
+        if self.sets:
+            return self._allcmds
+        self.sets.extend( findfabfiles() )
         for fabfile in self.fabfiles:
 
             #fabric._load_default_settings()
-	    commands = load_fabfile(fabfile)
+            commands = load_fabfile(fabfile)
             self.sets.append((commands,fabfile))
         self._allcmds = {}
         for commands,fabfile in self.sets:
@@ -289,58 +289,58 @@ class HostOut:
         res = True
         ran = False
         #sets = [(fabric.COMMANDS,"<DEFAULT>")]
-	self.allcmds()
-	sets = self.sets
-	self.options['user'] = self.options.get('user') or self.user or 'root'
-	self.options['effective-user'] = self.options.get('effective-user') or self.user or 'root'
-	self.options['buildout-user'] = self.options.get('buildout-user') or self.user or 'root'
-	api.env['hostout'] = self
-	api.env.update( self.options )
-	#api.env.path = '' #HACK - path == cwd
-	if self.password:
-	    api.env['password']=self.password
-	if self.identityfile and os.path.exists(self.identityfile):
-	    api.env['key_filename']=self.identityfile
+        self.allcmds()
+        sets = self.sets
+        self.options['user'] = self.options.get('user') or self.user or 'root'
+        self.options['effective-user'] = self.options.get('effective-user') or self.user or 'root'
+        self.options['buildout-user'] = self.options.get('buildout-user') or self.user or 'root'
+        api.env['hostout'] = self
+        api.env.update( self.options )
+        #api.env.path = '' #HACK - path == cwd
+        if self.password:
+            api.env['password']=self.password
+        if self.identityfile and os.path.exists(self.identityfile):
+            api.env['key_filename']=self.identityfile
 
-	api.env.update( dict(
-		   user=self.user,
-		   hosts=[self.host],
-		   port=self.port,
-		   ))
+        api.env.update( dict(
+                   user=self.user,
+                   hosts=[self.host],
+                   port=self.port,
+                   ))
 
-	self.inits = [(set.get('initcommand'),fabfile) for set,fabfile in self.sets if 'initcommand' in set]
-	for cmd in cmds:
-	    if cmd == cmds[-1]:
-	        self.runcommand(cmd, *cmdargs)
-	    else:
-	        self.runcommand(cmd)
-		
-		
+        self.inits = [(set.get('initcommand'),fabfile) for set,fabfile in self.sets if 'initcommand' in set]
+        for cmd in cmds:
+            if cmd == cmds[-1]:
+                self.runcommand(cmd, *cmdargs)
+            else:
+                self.runcommand(cmd)
+                
+                
     def runcommand(self, cmd, *cmdargs):
-	    # Let plugins change host or user if they want
-	    for func,fabfile in self.inits:
-		func(cmd)
+            # Let plugins change host or user if they want
+            for func,fabfile in self.inits:
+                func(cmd)
 
-	    funcs = [(set.get(cmd),fabfile) for set,fabfile in self.sets if cmd in set]
-	    if not funcs:
-		host = api.env.host
-		print >> sys.stderr, "'%(cmd)s' is not a valid command for host '%(host)s'"%locals()
-		return
-	    
-	    for func,fabfile in funcs:
-	
+            funcs = [(set.get(cmd),fabfile) for set,fabfile in self.sets if cmd in set]
+            if not funcs:
+                host = api.env.host
+                print >> sys.stderr, "'%(cmd)s' is not a valid command for host '%(host)s'"%locals()
+                return
+            
+            for func,fabfile in funcs:
+        
                 print "Hostout: Running command '%(cmd)s' from '%(fabfile)s'" % locals()
-		
-		key_filename = api.env.get('identity-file')
-		if key_filename and os.path.exists(key_filename):
-		    api.env.key_filename = key_filename
-		    
-		api.env['host'] = api.env.hosts[0]
-		api.env['host_string']="%(user)s@%(host)s:%(port)s"%api.env
-		api.env.cwd = ''
-		output.debug = True
+                
+                key_filename = api.env.get('identity-file')
+                if key_filename and os.path.exists(key_filename):
+                    api.env.key_filename = key_filename
+                    
+                api.env['host'] = api.env.hosts[0]
+                api.env['host_string']="%(user)s@%(host)s:%(port)s"%api.env
+                api.env.cwd = ''
+                output.debug = True
                 ran = True
-		res = func(*cmdargs)
+                res = func(*cmdargs)
                 if res not in [None,True]:
                     print >> sys.stderr, "Hostout aborted"
                     res = False
@@ -349,12 +349,12 @@ class HostOut:
                     res = True
     
     def __getattr__(self, name):
-	""" call all the methods by this name in fabfiles """
-	if name not in self.allcmds():
-	    raise AttributeError()
-	def run(*args):
-	    return self.runcommand(name, *args)
-	return run
+        """ call all the methods by this name in fabfiles """
+        if name not in self.allcmds():
+            raise AttributeError()
+        def run(*args):
+            return self.runcommand(name, *args)
+        return run
 
 #    def genhostout(self):
 #        """ generate a new buildout file which pins versions and uses our deployment distributions"""
@@ -385,11 +385,11 @@ class HostOut:
         config.read([path])
         if 'buildout' not in config.sections():
             config.add_section('buildout')
-	if self.options['versionsfile']:
-	    files = [self.options['versionsfile']]
-	else:
-	    files = []
-	files = files + self.buildout_cfg
+        if self.options['versionsfile']:
+            files = [self.options['versionsfile']]
+        else:
+            files = []
+        files = files + self.buildout_cfg
         files = [relpath(file, base) for file in files]
 
         config.set('buildout', 'extends', ' '.join(files))
@@ -434,8 +434,8 @@ class Packages:
     """ responsible for packaging the development eggs ready to be released to each host"""
 
     def __init__(self, buildout):
-	
-	self.packages = packages = [p for p in buildout.get('packages','').split()]
+        
+        self.packages = packages = [p for p in buildout.get('packages','').split()]
 
         self.buildout_location = buildout.get('location','')
         self.dist_dir = buildout.get('dist_dir','')
@@ -448,14 +448,14 @@ class Packages:
         self.local_eggs = {}
 
     def getDistEggs(self):
-	import pdb; pdb.set_trace()
-	files = os.listdir(self.dist_dir)
-	
-	eggs = []
-	for file in files:
-	    eggs += pkg_resources.find_distributions(os.path.join(self.dist_dir, file) )
+        import pdb; pdb.set_trace()
+        files = os.listdir(self.dist_dir)
+        
+        eggs = []
+        for file in files:
+            eggs += pkg_resources.find_distributions(os.path.join(self.dist_dir, file) )
         return dict([(( egg.project_name,egg.version),egg) for egg in eggs])
-	#eggs = pkg_resources.Environment(self.dist_dir)
+        #eggs = pkg_resources.Environment(self.dist_dir)
         #return dict([(( egg.project_name,egg.version),egg) for egg in eggs])
 
 
@@ -469,17 +469,17 @@ class Packages:
 
         #python setup.py sdist bdist_egg
  #       tmpdir = tempfile.mkdtemp()
-	localdist_dir = tempfile.mkdtemp()
-	
+        localdist_dir = tempfile.mkdtemp()
+        
         #eggs = self.getDistEggs()
-	from setuptools.package_index import interpret_distro_name
-	for path in os.listdir(self.dist_dir):
-	    #path = os.path.join(self.dist_dir, path)
-	    for dist in interpret_distro_name(self.dist_dir, path, None):
-		    #import pdb; pdb.set_trace()
-		    pass
-		
-	    #egg = pkg_resources.find_distributions(path, only=False)
+        from setuptools.package_index import interpret_distro_name
+        for path in os.listdir(self.dist_dir):
+            #path = os.path.join(self.dist_dir, path)
+            for dist in interpret_distro_name(self.dist_dir, path, None):
+                    #import pdb; pdb.set_trace()
+                    pass
+                
+            #egg = pkg_resources.find_distributions(path, only=False)
 
         donepackages = []
         ids = {}
@@ -494,21 +494,21 @@ class Packages:
             ids[hash]=path
             path = os.path.abspath(path)
             dist = find_distributions(path)
-	    egg = None
+            egg = None
             #if len(dist):
             #    dist = dist[0]
-	#	for file in eggs:
-	#	    if file.count(hash):
-	#		egg = os.path.join(self.dist_dir, file)
-	#		break
-	    if False and egg:
-		#HACK should get out of zip file
-		version = dist.version
-		#if 'collective.recipe.filestorage' in dist.project_name:
-		#    import pdb; pdb.set_trace()
-		version += 'dev' not in dist.version and 'dev' or ''
-		version += hash not in dist.version and '-'+hash or ''
-		self.local_eggs[dist.project_name] = (dist.project_name, version, egg)
+        #       for file in eggs:
+        #           if file.count(hash):
+        #               egg = os.path.join(self.dist_dir, file)
+        #               break
+            if False and egg:
+                #HACK should get out of zip file
+                version = dist.version
+                #if 'collective.recipe.filestorage' in dist.project_name:
+                #    import pdb; pdb.set_trace()
+                version += 'dev' not in dist.version and 'dev' or ''
+                version += hash not in dist.version and '-'+hash or ''
+                self.local_eggs[dist.project_name] = (dist.project_name, version, egg)
             elif os.path.isdir(path):
                 print "Hostout: Develop egg %s changed. Releasing with hash %s" % (path,hash)
                 args=[path,
@@ -523,30 +523,30 @@ class Packages:
                                       ]
                 res = self.setup(args = args)
                 dist = find_distributions(path)
-		
+                
                 if not len(dist) or not os.listdir(localdist_dir):
-		    raise DistributionGenerationException(path, args)
+                    raise DistributionGenerationException(path, args)
                 dist = dist[0]
-		pkg = os.listdir(localdist_dir)[0]
-		loc = os.path.join(self.dist_dir, pkg)
-		if os.path.exists(loc):
-		    os.remove(loc)
-		shutil.move(os.path.join(localdist_dir, pkg), self.dist_dir)
-		
+                pkg = os.listdir(localdist_dir)[0]
+                loc = os.path.join(self.dist_dir, pkg)
+                if os.path.exists(loc):
+                    os.remove(loc)
+                shutil.move(os.path.join(localdist_dir, pkg), self.dist_dir)
+                
                 self.local_eggs[dist.project_name] = (dist.project_name, dist.version, loc)
                 #released[dist.project_name] = dist.version
             else:
 #                shutil.copy(path,localdist_dir)
                 self.local_eggs[path] = (None, None, path)
         if released:
-	    env = package_index.PackageIndex('file://'+pathname2url(localdist_dir))
+            env = package_index.PackageIndex('file://'+pathname2url(localdist_dir))
 
             #eggs = self.getDistEggs()
             for (name,version) in released.items():
-		
-		req  = pkg_resources.Requirement.parse("%(name)s==%(version)s"%locals())
-		env.prescan()
-		egg = env.find_packages(req)
+                
+                req  = pkg_resources.Requirement.parse("%(name)s==%(version)s"%locals())
+                env.prescan()
+                egg = env.find_packages(req)
                 #egg = eggs.get( (name, version) )
                 if egg:
                     self.local_eggs[name] = (name, version, egg.location)
@@ -639,19 +639,19 @@ def main(cfgfile, args):
                 continue
             elif arg == 'all':
                 hosts = allhosts.items()
-	    else:
-		pos = 'cmds'            
-        	# get all cmds
-		allcmds = {'deploy':None}
-        	for host,hostout in hosts:
-		    hostout.readsshconfig()
-		    allcmds.update(hostout.allcmds())
+            else:
+                pos = 'cmds'            
+                # get all cmds
+                allcmds = {'deploy':None}
+                for host,hostout in hosts:
+                    hostout.readsshconfig()
+                    allcmds.update(hostout.allcmds())
         if pos == 'cmds':
             #if arg == 'deploy':
             #    cmds += ['predeploy','uploadeggs','uploadbuildout','buildout','postdeploy']
             #    continue
             #el
-	    if arg in allcmds:
+            if arg in allcmds:
                 cmds += [arg]
                 continue
             pos = 'args'
@@ -669,17 +669,17 @@ def main(cfgfile, args):
         max_name_len = reduce(lambda a,b: max(a, len(b)), allcmds.keys(), 0)
         cmds = allcmds.items()
         cmds.sort(lambda x,y: cmp(x[0], y[0]))
-	for name, fn in cmds:
-	    print >> sys.stderr, '  ', name.ljust(max_name_len),
-	    if fn.__doc__:
-		print >> sys.stderr, ':', fn.__doc__.splitlines()[0]
-	    else:
-	        print >> sys.stderr, ''
+        for name, fn in cmds:
+            print >> sys.stderr, '  ', name.ljust(max_name_len),
+            if fn.__doc__:
+                print >> sys.stderr, ':', fn.__doc__.splitlines()[0]
+            else:
+                print >> sys.stderr, ''
     else:
         try:
-	    for host, hostout in hosts:
-	        hostout.readsshconfig()
-		hostout.runfabric(cmds, *cmdargs)
+            for host, hostout in hosts:
+                hostout.readsshconfig()
+                hostout.runfabric(cmds, *cmdargs)
             print("Done.")
         except SystemExit:
             # a number of internal functions might raise this one.
@@ -692,7 +692,7 @@ def main(cfgfile, args):
         #        return False
 #        finally:
 #            #disconnect_all()
-#	    pass
+#           pass
 
 
 
@@ -715,14 +715,14 @@ def findfabfiles():
     
     fabfiles = []
     for ep in iter_entry_points(
-	group='fabric',
-	# Use None to get all entry point names
-	name=None,
+        group='fabric',
+        # Use None to get all entry point names
+        name=None,
     ):
-	imported = ep.load()
-	funcs = dict(filter(is_task, vars(imported).items()))
-	fabfiles.append( (funcs, ep.module_name) )
-	# ep.name doesn't matter
+        imported = ep.load()
+        funcs = dict(filter(is_task, vars(imported).items()))
+        fabfiles.append( (funcs, ep.module_name) )
+        # ep.name doesn't matter
     #print fabfiles
     return fabfiles
 
@@ -789,7 +789,7 @@ def _dir_hash(paths):
     for path in paths:
         if os.path.isdir(path):
             walked = os.walk(path)
-	    #find_sources(path)
+            #find_sources(path)
         else:
             walked = [(os.path.dirname(path), [], [os.path.basename(path)])]
         for (dirpath, dirnames, filenames) in walked:
@@ -808,8 +808,8 @@ def _dir_hash(paths):
 from setuptools.command.egg_info import manifest_maker
 
 def find_sources(path):
-	import pdb; pdb.set_trace()
-	dist = find_distributions(path)[0]
+        import pdb; pdb.set_trace()
+        dist = find_distributions(path)[0]
         mm = manifest_maker(dist)
         mm.manifest = None
         mm.run()
@@ -836,9 +836,9 @@ class buildoutuser(object):
         self.f = f
 
     def __call__(self, *args, **vargs):
-	user = api.env.user
+        user = api.env.user
         api.env.user = api.env.hostout.options['buildout-user']
         self.f(*args, **vargs)
-	api.env.user = user
+        api.env.user = user
 
 
