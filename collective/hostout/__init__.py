@@ -109,7 +109,10 @@ class Recipe:
                 recipe = recipe_class(self.buildout, self.name, self.options)
                 self.subrecipes.append(recipe)
                 egg = extension.split(':')[0]
-                self.options['eggs'] = '\n'.join(self.options.get('eggs','').split() + [egg])
+                
+                main = self.buildout['buildout']['hostout-main']
+                mainpart = self.buildout[main]
+                mainpart['eggs'] = '\n'.join(mainpart.get('eggs','').split() + [egg])
 
                 continue
             else:
