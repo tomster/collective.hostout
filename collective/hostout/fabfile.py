@@ -3,7 +3,6 @@ import os.path
 from fabric import api, contrib
 from collective.hostout.hostout import buildoutuser
 from fabric.context_managers import cd
-import collective.hostout.bootstrap
 from pkg_resources import resource_filename
 
 
@@ -44,6 +43,7 @@ def setowners():
 
 
     path = api.env.path
+    bc = hostout.buildout_cache
     dl = hostout.getDownloadCache()
     dist = os.path.join(dl, 'dist')
     bc = hostout.getEggCache()
@@ -60,7 +60,7 @@ def setowners():
     api.sudo('mkdir -p %(var)s && chown -R %(effective)s:%(buildoutgroup)s %(var)s && '
              ' chmod -R u+rw,g+wrs,o-rw %(var)s ' % locals())
     
-    for cache in [dist,dl,bc]:
+    for cache in [bc, dl, bc]:
         #HACK Have to deal with a shared cache. maybe need some kind of group
         api.sudo('mkdir -p %(cache)s && chown -R %(buildout)s:%(buildoutgroup)s %(cache)s && '
                  ' chmod -R u+rw,a+r %(cache)s ' % locals())
