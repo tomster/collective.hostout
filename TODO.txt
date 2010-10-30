@@ -7,9 +7,13 @@ Todo list
 
 - fix tests
 
+- optionally use rsync for buildout and include files. This will make django deployment usable.
+
 - finish bootstrap from source that works on any kind of linux
 
 - use decorators for picking user for commands instead of initcommand hack
+
+- make generic init.d installer so hostout.supervisor can use this
 
 - implement super to properly support inheritance and scope for command plugins
 
