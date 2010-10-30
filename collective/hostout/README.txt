@@ -6,11 +6,25 @@ Hostout is a framework for managing remote buildouts via fabric scripts. It incl
 many helpful builtin commands to package, deploy and bootstrap a remote server
 with based on your local buildout.
 
-Adding your own commands
-************************
-
 Hostout uses fabric files. Fabric is any easy way to write python that
-colls commands on a host over ssh. Here is a basic fabfile which will echo
+colls commands on a host over ssh.
+
+Hostout is built around two ideas :-
+
+1. Sharing Fabric command configuration amongst developers in a team
+so where and how your applications is deployed becomes configuration not
+documentation. Deployment then becomes a single action by any member of the team.
+
+2. Sharing fabric scripts via PyPi so we don't have to reinvent ways
+to deploy or manage hosted applications
+
+
+How?
+
+Combining Fabric and buildout
+*****************************
+
+Here is a basic fabfile which will echo
 two variables on the remote server.
 
 
@@ -24,7 +38,8 @@ two variables on the remote server.
 ...
 ... """)
 
-Using hostout we can predefine some of the fabric settings as well as install
+Using hostout we can predefine some of the fabric scripts parameters
+as well as install
 the fabric runner by using hostout. Each hostout part in your buildout.cfg
 represents a connection to a server at a given path.
 
@@ -82,6 +97,65 @@ Note that we combined information from our buildout with
 commandline paramaters to determine the exact command sent
 to our server.
 
+Making a hostout plugin
+***********************
+
+It can be very helpful to package up our fabfiles for others to use.
+
+Hostout Plugins are eggs with three parts :-
+
+1. Fabric script
+
+2. A zc.buildout recipe to initialise the parameters of the fabric file commands
+
+3. Entry points for both the recipe and the fabric scripts
+
+>>>    entry_points = {'zc.buildout': ['default = hostout.myplugin:Recipe',],
+...                    'fabric': ['fabfile = hostout.myplugin.fabfile']
+...                    },
+
+Once packaged and released others can add your plugin to their hostout e.g.
+
+>>> write('buildout.cfg',
+... """
+... [buildout]
+... parts = host1
+...
+... [host1]
+... recipe = collective.hostout
+... extends = hostout.myplugin
+... param1 = blah
+... """ )
+
+>>> print system('bin/buildout')
+
+>>> print system('bin/hostout host1')
+cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
+Valid commands are:
+...
+   mycommand        : example of command from hostout.myplugin
+
+
+#TODO Example of echo plugin
+
+
+Using fabric plugins
+********************
+
+You use commands others have made via the extends option.
+Name a buildout recipe egg in the extends option and buildout will download
+and merge any fabfiles and other configuration options from that recipe into
+your current hostout configuration. The following are examples of builtin
+plugins others are available on pypi.
+
+see hostout.cloud_, hostout.supervisor_, hostout.ubuntu_ or
+hostout.mrdeveloper for examples.
+
+.. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
+.. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
+.. _hostout.ubuntu: http://pypi.python.org/pypi/hostout.ubuntu
+
+
 
 Buildin Commands
 ****************
@@ -113,7 +187,7 @@ Hostout: Running command 'run' from collective.hostout
 Logging into the following hosts as root:
     127.0.0.1
 [127.0.0.1] run: sh -c "cd /var/host1 && pwd"
-[127.0.0.1] out: CMD RECIEVED
+[127.0.0.1] out: ...
 Done.
 
 We can also use our login user and password to run quick sudo commands
@@ -123,7 +197,7 @@ Hostout: Running command 'sudo' from collective.hostout
 Logging into the following hosts as root:
     127.0.0.1
 [127.0.0.1] run: sh -c "cd /var/host1 && cat/etc/hosts"
-[127.0.0.1] out: CMD RECIEVED
+[127.0.0.1] out: ...
 Done.
 
 Hostout, users and logins
@@ -143,41 +217,6 @@ buildout-group
   A group which will own the buildout files including the var files. This group is created if needed in the bootstrap
   command.
   
-Making a fabric plugin
-**********************
-
-It can be very helpful to package up our fabfiles for others to use.
-
-#TODO Example of echo plugin
-
-Hostout plugins are setuptools packages that have a zc.buildout recipe
-and a fabfile. The recipe is used to set defaults which will later get passed
-into the fabric environment.
-The fabric fabfile has to have an entrypoint in your setup.py file so hostout
-can find it. e.g.
-
->>>    entry_points = {'zc.buildout': ['default = collective.hostout:Recipe',],
-...                    'fabric': ['fabfile = collective.hostout.fabfile']
-...                    },
-
-  
-  
-Using fabric plugins
-********************
-
-You use commands others have made via the extends option.
-Name a buildout recipe egg in the extends option and buildout will download
-and merge any fabfiles and other configuration options from that recipe into
-your current hostout configuration. The following are examples of builtin
-plugins others are available on pypi.
-
-see hostout.cloud_, hostout.supervisor_, hostout.ubuntu_ or
-hostout.mrdeveloper for examples.
-
-.. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
-.. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
-.. _hostout.ubuntu: http://pypi.python.org/pypi/hostout.ubuntu
-
 
 
 Definitions
@@ -329,6 +368,7 @@ The buildout file used on the host pins pins the uploaded eggs
     example = 0.0.0dev-...
 
 
+
 Bootstrapping
 -------------
 
@@ -395,7 +435,7 @@ buildout-cache
 
 python-version
   The version of python to install during bootstrapping. Defaults to version
-  used in the local buildout. (UNIMPLIMENTED) 
+  used in the local buildout.
 
 
 
