@@ -2,6 +2,7 @@ import os
 import os.path
 from fabric import api, contrib
 from collective.hostout.hostout import buildoutuser
+from fabric.context_managers import cd
 
 
 def setupusers():
@@ -108,6 +109,77 @@ def predeploy():
     #Login as user plone
 #    api.env['user'] = api.env['effective-user']
 
+
+BUILDOUT = """
+[buildout]
+extends =
+      src/base.cfg
+      src/readline.cfg
+      src/libjpeg.cfg
+      src/python%(majorshort)s.cfg
+      src/links.cfg
+
+parts =
+      ${buildout:base-parts}
+      ${buildout:readline-parts}
+      ${buildout:libjpeg-parts}
+      ${buildout:python%(majorshort)s-parts}
+      ${buildout:links-parts}
+
+# ucs4 is needed as lots of eggs like lxml are also compiled with ucs4 since most linux distros compile with this      
+[python-%(major)s-build:default]
+extra_options +=
+    --enable-unicode=ucs4
+      
+"""
+
+def bootstrapsource():
+    path = api.env.path
+    try:
+        api.sudo("test -e  %(path)s/bin/buildout " % locals(), pty=True)
+        return
+    except:
+        pass
+    
+    hostout = api.env.hostout
+    hostout = api.env.get('hostout')
+    buildout = api.env['buildout-user']
+    effective = api.env['effective-user']
+    buildoutgroup = api.env['buildout-group']
+
+    hostout.setupusers()
+    api.sudo('mkdir -p %(path)s' % locals())
+    hostout.setowners()
+
+    version = api.env['python-version']
+    major = '.'.join(version.split('.')[:2])
+    majorshort = major.replace('.','')
+    api.sudo('mkdir -p /var/buildout-python')
+
+    with cd('/var/buildout-python'):
+        #api.sudo('wget http://www.python.org/ftp/python/%(major)s/Python-%(major)s.tgz'%locals())
+        #api.sudo('tar xfz Python-%(major)s.tgz;cd Python-%(major)s;./configure;make;make install'%locals())
+
+        api.sudo('svn co http://svn.plone.org/svn/collective/buildout/python/')
+        with cd('python'):
+            api.sudo('curl -O http://python-distribute.org/distribute_setup.py')
+            api.sudo('python distribute_setup.py')
+            api.sudo('python bootstrap.py --distribute')
+            contrib.files.append(BUILDOUT%locals(), 'buildout.cfg', use_sudo=True)
+            api.sudo('bin/buildout')
+        
+    api.env.cwd = api.env.path
+    api.sudo('wget -O bootstrap.py http://python-distribute.org/bootstrap.py')
+    api.sudo('echo "[buildout]" > buildout.cfg')
+    api.sudo('source /var/buildout-python/python/python-%(major)s/bin/activate; python bootstrap.py --distribute' % locals())
+    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s /var/buildout-python '%locals())
+
+    #ensure bootstrap files have correct owners
+    hostout.setowners()
+
+    
+
+
 def _bootstrap():
     """Install python,users and buildout"""
     hostout = api.env['hostout']
@@ -210,6 +282,7 @@ def buildout():
 #    sudo('find $(install_dir)  -type d -name var -exec chown -R $(effectiveuser) \{\} \;')
 #    sudo('find $(install_dir)  -type d -name LC_MESSAGES -exec chown -R $(effectiveuser) \{\} \;')
 #    sudo('find $(install_dir)  -name runzope -exec chown $(effectiveuser) \{\} \;')
+    hostout.setowners()
 
 
 
