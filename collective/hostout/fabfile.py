@@ -133,7 +133,6 @@ def bootstrap():
     major = '.'.join(version.split('.')[:2])
 
     api.sudo('python%(major)s bootstrap.py --distribute' % locals())
-    api.env.hostout.setowners()
 
 
 @buildoutuser
@@ -181,7 +180,8 @@ def uploadbuildout():
     install_dir=hostout.options['path']
     with cd(install_dir):
         api.run('tar -p -xvf %(tgt)s' % locals())
-    
+    hostout.setowners()
+
 @buildoutuser
 def buildout():
     """Run the buildout on the remote server """
