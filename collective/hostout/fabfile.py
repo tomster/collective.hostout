@@ -99,41 +99,11 @@ def predeploy():
     except:
         hostout.bootstrap()
         hostout.setowners()
-    
 
     api.env.cwd = api.env.path
     for cmd in hostout.getPreCommands():
         api.sudo('sh -c "%s"'%cmd)
     api.env.cwd = ''
-
-
-
-    #Login as user plone
-#    api.env['user'] = api.env['effective-user']
-
-
-BUILDOUT = """
-[buildout]
-extends =
-      src/base.cfg
-      src/readline.cfg
-      src/libjpeg.cfg
-      src/python%(majorshort)s.cfg
-      src/links.cfg
-
-parts =
-      ${buildout:base-parts}
-      ${buildout:readline-parts}
-      ${buildout:libjpeg-parts}
-      ${buildout:python%(majorshort)s-parts}
-      ${buildout:links-parts}
-
-# ucs4 is needed as lots of eggs like lxml are also compiled with ucs4 since most linux distros compile with this      
-[python-%(major)s-build:default]
-extra_options +=
-    --enable-unicode=ucs4
-      
-"""
 
 
 def bootstrap():
@@ -164,94 +134,6 @@ def bootstrap():
 
     api.sudo('python%(major)s bootstrap.py --distribute' % locals())
     api.env.hostout.setowners()
-
-def bootstrapsource():
-    path = api.env.path
-    try:
-        api.sudo("test -e  %(path)s/bin/buildout " % locals(), pty=True)
-        return
-    except:
-        pass
-
-    hostout = api.env.get('hostout')
-    buildout = api.env['buildout-user']
-    effective = api.env['effective-user']
-    buildoutgroup = api.env['buildout-group']
-
-    hostout.setupusers()
-    api.sudo('mkdir -p %(path)s' % locals())
-    hostout.setowners()
-
-    version = api.env['python-version']
-    major = '.'.join(version.split('.')[:2])
-    majorshort = major.replace('.','')
-    api.sudo('mkdir -p /var/buildout-python')
-
-    with cd('/var/buildout-python'):
-        #api.sudo('wget http://www.python.org/ftp/python/%(major)s/Python-%(major)s.tgz'%locals())
-        #api.sudo('tar xfz Python-%(major)s.tgz;cd Python-%(major)s;./configure;make;make install'%locals())
-
-        api.sudo('svn co http://svn.plone.org/svn/collective/buildout/python/')
-        with cd('python'):
-            api.sudo('curl -O http://python-distribute.org/distribute_setup.py')
-            api.sudo('python distribute_setup.py')
-            api.sudo('python bootstrap.py --distribute')
-            contrib.files.append(BUILDOUT%locals(), 'buildout.cfg', use_sudo=True)
-            api.sudo('bin/buildout')
-        
-    api.env.cwd = api.env.path
-    api.sudo('wget -O bootstrap.py http://python-distribute.org/bootstrap.py')
-    api.sudo('echo "[buildout]" > buildout.cfg')
-    api.sudo('source /var/buildout-python/python/python-%(major)s/bin/activate; python bootstrap.py --distribute' % locals())
-    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s /var/buildout-python '%locals())
-
-    #ensure bootstrap files have correct owners
-    hostout.setowners()
-
-    
-
-
-def _bootstrap():
-    """Install python,users and buildout"""
-    hostout = api.env['hostout']
-
-    raise Exception("Generic bootstrap unimplemented. Look for plugins")
-
-
-    unified='Plone-3.2.1r3-UnifiedInstaller'
-    unified_url='http://launchpad.net/plone/3.2/3.2.1/+download/Plone-3.2.1r3-UnifiedInstaller.tgz'
-
-    sudo('mkdir -p %(dc)s/dist && sudo chmod -R a+rw  %(dc)s'%dict(dc=api.env.download_cache) )
-    sudo(('mkdir -p %(dc)s && sudo chmod -R a+rw  %(dc)s') % dict(dc=hostout.getEggCache()) )
-
-    #install prerequsites
-    #sudo('which g++ || (sudo apt-get -ym update && sudo apt-get install -ym build-essential libssl-dev libreadline5-dev) || echo "not ubuntu"')
-
-    #Download the unified installer if we don't have it
-    buildout_dir=api.env.hostout.options['path']
-    dist_dir = api.env.download_cache
-    sudo('test -f %(buildout_dir)s/bin/buildout || '
-         'test -f %(dist_dir)s/%(unified)s.tgz || '
-         '( cd /tmp && '
-         'wget  --continue %(unified_url)s '
-         '&& sudo mv /tmp/%(unified)s.tgz %(dist_dir)s/%(unified)s.tgz '
-#         '&& sudo chown %(effectiveuser)s %(dist_dir)s/%(unified)s.tgz '+
-        ')' % locals() )
-         
-    # untar and run unified installer
-    install_dir, instance =os.path.split(buildout_dir)
-    effectiveuser = api.env['effective-user']
-    sudo(('test -f %(buildout_dir)s/bin/buildout || '+
-          '(cd /tmp && '+
-          'tar -xvf %(dist_dir)s/%(unified)s.tgz && '+
-          'test -d /tmp/%(unified)s && '+
-          'cd /tmp/%(unified)s && '+
-          'sudo mkdir -p  %(install_dir)s && '+
-          'sudo ./install.sh --target=%(install_dir)s --instance=%(instance)s --user=%(effectiveuser)s --nobuildout standalone && '+
-          'sudo chown -R %(effectiveuser)s %(install_dir)s/%(instance)s)') % locals()
-          )
-    api.env.cwd = hostout.remote_dir
-    api.sudo('bin/buildout ')
 
 
 @buildoutuser
