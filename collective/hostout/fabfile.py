@@ -146,17 +146,20 @@ def uploadeggs():
 
     dl = hostout.getDownloadCache()
     contents = api.run('ls %(dl)s/dist'%locals()).split()
-    buildout = api.env.hostout.options['buildout-user']
 
     for pkg in hostout.localEggs():
         name = os.path.basename(pkg)
         if name not in contents:
             tmp = os.path.join('/tmp', name)
-            tgt = os.path.join(dl, 'dist', name)
             api.put(pkg, tmp)
             api.run("mv -f %(tmp)s %(tgt)s && "
-                    "chown %(buildout)s %(tgt)s && "
-                    "chmod a+r %(tgt)s" % locals() )
+                "chown %(buildout)s %(tgt)s && "
+                "chmod a+r %(tgt)s" % dict(
+                    tmp = tmp,
+                    tgt = os.path.join(dl, 'dist', name),
+                    buildout=api.env.hostout.options['buildout-user'],
+                    ))
+
 @buildoutuser
 def uploadbuildout():
     """Upload buildout pinned version of buildouts to host """
