@@ -7,6 +7,10 @@ Todo list
 
 - fix tests
 
+- move ubuntu redhat etc into collective.hostout
+
+- make a more explicit commandline (argsparse)
+
 - optionally use rsync for buildout and include files. This will make django deployment usable.
 
 - finish bootstrap from source that works on any kind of linux
