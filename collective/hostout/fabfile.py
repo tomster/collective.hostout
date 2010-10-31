@@ -15,21 +15,19 @@ def setupusers():
     buildoutgroup = api.env['buildout-group']
     owner = buildout
     
-    api.sudo('groupadd %(buildoutgroup)s || echo "group exists"' % locals())
-    addopt = "--no-user-group -M -g %(buildoutgroup)s" % locals()
-    api.sudo('egrep ^%(owner)s: /etc/passwd || useradd %(owner)s %(addopt)s' % locals())
-    api.sudo('egrep ^%(effective)s: /etc/passwd || useradd %(effective)s %(addopt)s' % locals())
-    api.sudo('gpasswd -a %(owner)s %(buildoutgroup)s' % locals())
-    api.sudo('gpasswd -a %(effective)s %(buildoutgroup)s' % locals())
-
+    api.sudo('groupadd %s || echo "group exists"' % buildoutgroup)
+    addopt = "--no-user-group -M -g %s" % buildoutgroup
+    api.sudo('egrep ^%(owner)s: /etc/passwd || useradd %(owner)s %(addopt)s' % dict(owner=owner, addopt=addopt))
+    api.sudo('egrep ^%(effective)s: /etc/passwd || useradd %(effective)s %(addopt)s' % dict(effective=effective, addopt=addopt))
+    api.sudo('gpasswd -a %(owner)s %(buildoutgroup)s' % dict(owner=owner, buildoutgroup=buildoutgroup))
+    api.sudo('gpasswd -a %(effective)s %(buildoutgroup)s' % dict(effective=effective, buildoutgroup=buildoutgroup))
 
     #Copy authorized keys to buildout user:
     key_filename, key = api.env.hostout.getIdentityKey()
     for owner in [api.env['buildout-user']]:
-        api.sudo("mkdir -p ~%(owner)s/.ssh" % locals())
-        api.sudo('touch ~%(owner)s/.ssh/authorized_keys'%locals() )
-        contrib.files.append(key, '~%(owner)s/.ssh/authorized_keys'%locals(), use_sudo=True)
-        #    api.sudo("echo '%(key)s' > ~%(owner)s/.ssh/authorized_keys" % locals())
+        api.sudo("mkdir -p ~%s/.ssh" % owner)
+        api.sudo('touch ~%s/.ssh/authorized_keys' % owner)
+        contrib.files.append(key, '~%s/.ssh/authorized_keys' % owner, use_sudo=True)
         api.sudo("chown -R %(owner)s ~%(owner)s/.ssh" % locals() )
     
 
@@ -144,7 +142,7 @@ def uploadeggs():
     #need to send package. cycledown servers, install it, run buildout, cycle up servers
 
     dl = hostout.getDownloadCache()
-    contents = api.run('ls %(dl)s/dist'%locals()).split()
+    contents = api.run('ls %s/dist' % dl).split()
 
     for pkg in hostout.localEggs():
         name = os.path.basename(pkg)
