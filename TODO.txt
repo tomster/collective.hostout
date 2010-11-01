@@ -7,34 +7,37 @@ Todo list
 
 - fix tests
 
-- move ubuntu redhat etc into collective.hostout
+- move ubuntu redhat etc into collective.hostout. Enable ability to detect hostos.
 
-- make a more explicit commandline (argsparse)
+- make a more explicit commandline (argsparse). make more similar to fabric cl
 
 - optionally use rsync for buildout and include files. This will make django deployment usable.
 
 - finish bootstrap from source that works on any kind of linux
 
-- use decorators for picking user for commands instead of initcommand hack
+- use decorators for picking user for commands instead of initcommand hack. new fabric should help here
 
 - make generic init.d installer so hostout.supervisor can use this
 
-- implement super to properly support inheritance and scope for command plugins
+- implement api.env.super.somemethod() to allow an overridden command choose if it wants to run
+ the command it overrode or not.
 
 - plugins for database handling including backing up, moving between development, staging and production
-  regardless of location.
+  regardless of location. Should probably be hostout.plone.
   
 - Integrate with SCM to tag all parts so deployments can be rolled back.
 
 - Handle basic rollback when no SCM exists, for instance when buildout fails. For instance
   make a log file of each deployment including all versions that were deployed. Version each buildout.cfg
-  sent to the server so as long as the egg cache is the same, you can rerun an old buildout
+  sent to the server so as long as the egg cache is the same, you can rerun an old buildout.
+  e.g. bin/hostout host revert ~1
 
 - Help deploy DNS settings, possibly by hosting company specific plugins
 
-- Incorporate unified installer environment setup scripts directly.
-
 - Support firewalled servers by an optional tunnel back to a client side web proxy. Would also make
-   more reliable
+   more reliable. Can use Egg proxy locally and parimoko should allow tunnels I hope.
 
 - Explore ways to make an even easier transition from default plone install to fully hosted site.
+  Integrate zopeskel or similar create a production.cfg
+
+- Ensure we can support workflow where no hashed packages are used and instead a private egg cache is used and version numbers have to be incrented to make a release
