@@ -12,35 +12,27 @@
 #
 ##############################################################################
 
-import logging, os, shutil, tempfile, urllib2, urlparse
-import setuptools.archive_util
-import datetime
+import os
+import md5
+import shutil, tempfile
+import socket
 
 import zc.buildout
-import fabric
 import tarfile
 import ConfigParser
 import sys
-from hashlib import md5
-import os
-from zc.buildout import buildout
-from os.path import join, exists
 from itertools import chain
 import re
-from zc.buildout.buildout import Buildout
-from paramiko import DSSKey, PKey, RSAKey
+from paramiko import RSAKey
 from paramiko import SSHConfig
-from fabric.main import load_fabfile
 from fabric import api
 from fabric.state import output
 
-import time, random, md5
+import time, random
 from collective.hostout import relpath
 import pkg_resources
 from setuptools import package_index
 from urllib import pathname2url
-from pkg_resources import resource_string, resource_filename
-
 
 
 """
@@ -163,16 +155,6 @@ class HostOut:
     def getRemoteBuildoutPath(self):
         return self.remote_dir
 
-    def splitPath(self):
-        """return the two parts of the path needed by unified installer, the base install path
-        and the instance sub directory of the install path. It does this by assuming the last
-        part of the path is the instance sub directory"""
-
-        install_dir=os.path.split(self.remote_dir)[0]
-        instance=os.path.split(self.remote_dir)[1]
-        return (install_Dir, instance)
-
-
     def localEggs(self):
         self.getHostoutPackage() #ensure eggs are generated
         return [e for p,v,e in self.packages.local_eggs.values()]
@@ -198,12 +180,9 @@ class HostOut:
         if self.hostout_package is not None:
             return self.hostout_package
 
-        folder = self.dist_dir
-
         dist_dir = self.packages.dist_dir
         self.config_file = self.genhostout()
         config_file = os.path.abspath(os.path.join(self.packages.buildout_location,self.config_file))
-        base = os.path.dirname(config_file)
         if not os.path.exists(config_file):
             raise Exception("Invalid config file")
 
@@ -289,11 +268,8 @@ class HostOut:
     def runfabric(self, cmds=None, *cmdargs):
         "return all commands if none found to run"
 
-        res = True
-        ran = False
         #sets = [(fabric.COMMANDS,"<DEFAULT>")]
         self.allcmds()
-        sets = self.sets
         self.options['user'] = self.options.get('user') or self.user or 'root'
         self.options['effective-user'] = self.options.get('effective-user') or self.user or 'root'
         self.options['buildout-user'] = self.options.get('buildout-user') or self.user or 'root'
@@ -326,7 +302,6 @@ class HostOut:
 
             funcs = [(set.get(cmd),fabfile) for set,fabfile in self.sets if cmd in set]
             if not funcs:
-                host = api.env.host
                 print >> sys.stderr, "'%(cmd)s' is not a valid command for host '%(host)s'"%locals()
                 return
             
@@ -342,7 +317,6 @@ class HostOut:
                 api.env['host_string']="%(user)s@%(host)s:%(port)s"%api.env
                 api.env.cwd = ''
                 output.debug = True
-                ran = True
                 res = func(*cmdargs)
                 if res not in [None,True]:
                     print >> sys.stderr, "Hostout aborted"
@@ -438,7 +412,7 @@ class Packages:
 
     def __init__(self, buildout):
         
-        self.packages = packages = [p for p in buildout.get('packages','').split()]
+        self.packages = [p for p in buildout.get('packages','').split()]
 
         self.buildout_location = buildout.get('location','')
         self.dist_dir = buildout.get('dist_dir','')
@@ -483,7 +457,6 @@ class Packages:
                 
             #egg = pkg_resources.find_distributions(path, only=False)
 
-        donepackages = []
         ids = {}
         self.local_eggs = {}
         released = {}
@@ -523,7 +496,7 @@ class Packages:
                                      '--dist-dir',
                                      '%s'%localdist_dir,
                                       ]
-                res = self.setup(args = args)
+                self.setup(args = args)
                 dist = find_distributions(path)
                 
                 if not len(dist) or not os.listdir(localdist_dir):
@@ -616,7 +589,6 @@ def main(cfgfile, args):
     config = ConfigParser.ConfigParser()
     config.optionxform = str
     config.read([cfgfile])
-    files = [cfgfile]
     allhosts = {}
 #    buildout = Buildout(config.get('buildout','buildout'),[])
     packages = Packages(dict(config.items('buildout')))
@@ -762,8 +734,6 @@ def load_fabfile(filename, **kwargs):
     #    return
     #_LOADED_FABFILES.add(filename)
     
-    captured = {}
-    commands = {}
     #execfile(filename, _new_namespace(), captured)
     imported = imp.load_source(filename.replace('/','.'), filename)
     return dict(filter(is_task, vars(imported).items()))
@@ -831,7 +801,6 @@ def getVersion(path):
         return dist.version
 
 
-from fabric import api
 class buildoutuser(object):
 
     def __init__(self, f):
