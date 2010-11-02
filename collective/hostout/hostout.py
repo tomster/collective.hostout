@@ -122,6 +122,7 @@ class HostOut:
         self.start_cmd = opt.get('post-commands')
         self.stop_cmd = opt.get('pre-commands')
         self.extra_config = opt.get('include')
+        self.extends = [s.strip() for s in opt.get('extends').split()] + ['collective.hostout']
         self.buildout_cfg = [p.strip() for p in opt.get('buildout','buildout.cfg').split() if p.strip()]
         self.versions_part = opt.get('versions','versions')
         self.parts = [p.strip() for p in opt.get('parts','').split() if p.strip()]
@@ -271,7 +272,9 @@ class HostOut:
     def allcmds(self):
         if self.sets:
             return self._allcmds
-        self.sets.extend( findfabfiles() )
+        fabfiles = [(cmds,fabfile) for cmds,fabfile,pkg in findfabfiles() if pkg in self.extends]
+        self.sets.extend( fabfiles)
+        
         for fabfile in self.fabfiles:
 
             #fabric._load_default_settings()
@@ -448,7 +451,6 @@ class Packages:
         self.local_eggs = {}
 
     def getDistEggs(self):
-        import pdb; pdb.set_trace()
         files = os.listdir(self.dist_dir)
         
         eggs = []
@@ -720,8 +722,9 @@ def findfabfiles():
         name=None,
     ):
         imported = ep.load()
+	pkg = ep.dist.project_name
         funcs = dict(filter(is_task, vars(imported).items()))
-        fabfiles.append( (funcs, ep.module_name) )
+        fabfiles.append( (funcs, ep.module_name, pkg) )
         # ep.name doesn't matter
     #print fabfiles
     return fabfiles
@@ -808,7 +811,6 @@ def _dir_hash(paths):
 from setuptools.command.egg_info import manifest_maker
 
 def find_sources(path):
-        import pdb; pdb.set_trace()
         dist = find_distributions(path)[0]
         mm = manifest_maker(dist)
         mm.manifest = None
