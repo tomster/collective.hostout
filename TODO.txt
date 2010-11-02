@@ -38,6 +38,17 @@ Todo list
    more reliable. Can use Egg proxy locally and parimoko should allow tunnels I hope.
 
 - Explore ways to make an even easier transition from default plone install to fully hosted site.
-  Integrate zopeskel or similar create a production.cfg
+  Integrate zopeskel or similar create a production.cfg. Could do the same for wsgi or django.
+  Perhaps ploneboutique can help here
 
 - Ensure we can support workflow where no hashed packages are used and instead a private egg cache is used and version numbers have to be incrented to make a release
+
+- create a command to download a remote buildout, including pinned versions and develp eggs.
+
+- hide extra output unless verbose mode is used. look at mr.awesome code for this
+
+- get hostout.cloud working for micro ec2
+
+- dry run feature. Show combined fab commands before with actually running them.  help developers decide
+if they want to use the system or not.
+
