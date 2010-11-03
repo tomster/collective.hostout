@@ -22,8 +22,8 @@ Todo list
 - implement api.env.super.somemethod() to allow an overridden command choose if it wants to run
  the command it overrode or not.
 
-- plugins for database handling including backing up, moving between development, staging and production
-  regardless of location. Should probably be hostout.plone.
+- hostout.plone for database handling including backing up, moving between development, staging and production
+  regardless of location.
   
 - Integrate with SCM to tag all parts so deployments can be rolled back.
 

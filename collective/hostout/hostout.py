@@ -114,7 +114,7 @@ class HostOut:
         self.start_cmd = opt.get('post-commands')
         self.stop_cmd = opt.get('pre-commands')
         self.extra_config = opt.get('include')
-        self.extends = [s.strip() for s in opt.get('extends').split()] + ['collective.hostout']
+        self.extends = [s.strip() for s in opt.get('extends','').split()] + ['collective.hostout']
         self.buildout_cfg = [p.strip() for p in opt.get('buildout','buildout.cfg').split() if p.strip()]
         self.versions_part = opt.get('versions','versions')
         self.parts = [p.strip() for p in opt.get('parts','').split() if p.strip()]
@@ -808,8 +808,12 @@ class buildoutuser(object):
 
     def __call__(self, *args, **vargs):
         user = api.env.user
+        host_string = api.env.host_string
         api.env.user = api.env.hostout.options['buildout-user']
+        #this will reset the connection
+        api.env['host_string']="%(user)s@%(host)s:%(port)s"%api.env
         self.f(*args, **vargs)
         api.env.user = user
+        api.env.host_string = host_string
 
 
