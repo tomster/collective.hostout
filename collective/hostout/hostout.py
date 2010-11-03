@@ -13,7 +13,7 @@
 ##############################################################################
 
 import os
-import md5
+from hashlib import md5
 import shutil, tempfile
 import socket
 
@@ -752,13 +752,13 @@ def uuid( *args ):
     # if we can't get a network address, just imagine one
     a = random.random()*100000000000000000L
   data = str(t)+' '+str(r)+' '+str(a)+' '+str(args)
-  data = md5.md5(data).hexdigest()
+  data = md5(data).hexdigest()
   return data
 
 ignore_directories = '.svn', 'CVS', 'build', '.git'
 ignore_files = ['PKG-INFO']
 def _dir_hash(paths):
-    hash = md5.new()
+    hash = md5()
     for path in paths:
         if os.path.isdir(path):
             walked = os.walk(path)
@@ -810,10 +810,17 @@ class buildoutuser(object):
         user = api.env.user
         host_string = api.env.host_string
         api.env.user = api.env.hostout.options['buildout-user']
+        key_filename = api.env.key_filename
+        ifile = api.env.get('identity-file')
+        if ifile and os.path.exists(ifile):
+            api.env.key_filename = ifile
+        
+        
         #this will reset the connection
         api.env['host_string']="%(user)s@%(host)s:%(port)s"%api.env
         self.f(*args, **vargs)
         api.env.user = user
         api.env.host_string = host_string
+        api.env['key_filename'] = key_filename
 
 
