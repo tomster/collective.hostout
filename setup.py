@@ -35,7 +35,7 @@ setup(
         "Topic :: Utilities",],
     url='https://svn.plone.org/svn/collective/'+name,
     long_description=(
-        read('README.txt')
+        read('README.rst')
         + '\n' +
         read('collective', 'hostout', 'README.txt')
         + '\n' +
