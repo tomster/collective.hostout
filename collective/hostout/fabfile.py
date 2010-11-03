@@ -1,6 +1,7 @@
 import os
 import os.path
-from fabric import api, contrib
+from fabric import api
+from fabric.contrib.files import append
 from collective.hostout.hostout import buildoutuser
 from fabric.context_managers import cd
 from pkg_resources import resource_filename
@@ -27,7 +28,7 @@ def setupusers():
     for owner in [api.env['buildout-user']]:
         api.sudo("mkdir -p ~%s/.ssh" % owner)
         api.sudo('touch ~%s/.ssh/authorized_keys' % owner)
-        contrib.files.append(key, '~%s/.ssh/authorized_keys' % owner, use_sudo=True)
+        append(key, '~%s/.ssh/authorized_keys' % owner, use_sudo=True)
         api.sudo("chown -R %(owner)s ~%(owner)s/.ssh" % locals() )
     
 
@@ -64,14 +65,14 @@ def setowners():
                  ' chmod -R u+rw,a+r %(cache)s ' % locals())
 
 
-def initcommand(cmd):
-    if cmd in ['uploadeggs','uploadbuildout','buildout','run']:
-        api.env.user = api.env.hostout.options['buildout-user']
-    else:
-        api.env.user = api.env.hostout.options['user']
-    key_filename = api.env.get('identity-file')
-    if key_filename and os.path.exists(key_filename):
-        api.env.key_filename = key_filename
+#def initcommand(cmd):
+#    if cmd in ['uploadeggs','uploadbuildout','buildout','run']:
+#        api.env.user = api.env.hostout.options['buildout-user']
+#    else:
+#        api.env.user = api.env.hostout.options['user']
+#    key_filename = api.env.get('identity-file')
+#    if key_filename and os.path.exists(key_filename):
+#        api.env.key_filename = key_filename
 
 def deploy():
     "predeploy, uploadeggs, uploadbuildout, buildout and then postdeploy"
@@ -178,7 +179,7 @@ def uploadbuildout():
     install_dir=hostout.options['path']
     with cd(install_dir):
         api.run('tar -p -xvf %(tgt)s' % locals())
-    hostout.setowners()
+#    hostout.setowners()
 
 @buildoutuser
 def buildout():
@@ -195,14 +196,14 @@ def buildout():
 #    sudo('find $(install_dir)  -type d -name var -exec chown -R $(effectiveuser) \{\} \;')
 #    sudo('find $(install_dir)  -type d -name LC_MESSAGES -exec chown -R $(effectiveuser) \{\} \;')
 #    sudo('find $(install_dir)  -name runzope -exec chown $(effectiveuser) \{\} \;')
-    hostout.setowners()
 
 
 
 def postdeploy():
     """Perform any final plugin tasks """
-    
+
     hostout = api.env.get('hostout')
+    hostout.setowners()
 
     api.env.cwd = api.env.path
     hostout_file=hostout.getHostoutFile()
