@@ -33,3 +33,5 @@ Hostout puts all of the settings for all of your environments in an easy-to-mana
 
 .. contents::
 
+.. include:: collective/hostout/README.rst
+
