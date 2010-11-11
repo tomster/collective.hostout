@@ -52,12 +52,13 @@ def setowners():
     # - login user to own the buildout and the cache.
     # - effective user to be own the var dir + able to read buildout and cache.
     
-    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s %(path)s && '
-             ' chmod -R u+rw,g+r-w,o-rw %(path)s' % locals())
-    api.sudo('chmod g+x `find %(path)s -perm -u+x`' % locals()) #so effective can execute code
-    api.sudo('chmod g+s `find %(path)s -type d`' % locals()) # so new files will keep same group
+    api.sudo("find %(path)s  -maxdepth 0 ! -name var -exec chown -R %(buildout)s:%(buildoutgroup)s '{}' \; "
+             " -exec chmod -R u+rw,g+r-w,o-rw '{}' \;" % locals())
     api.sudo('mkdir -p %(var)s && chown -R %(effective)s:%(buildoutgroup)s %(var)s && '
              ' chmod -R u+rw,g+wrs,o-rw %(var)s ' % locals())
+#    api.sudo("chmod g+x `find %(path)s -perm -g-x` || find %(path)s -perm -g-x -exec chmod g+x '{}' \;" % locals()) #so effective can execute code
+#    api.sudo("chmod g+s `find %(path)s -type d` || find %(path)s -type d -exec chmod g+s '{}' \;" % locals()) # so new files will keep same group
+#    api.sudo("chmod g+s `find %(path)s -type d` || find %(path)s -type d -exec chmod g+s '{}' \;" % locals()) # so new files will keep same group
     
     for cache in [bc, dl, bc]:
         #HACK Have to deal with a shared cache. maybe need some kind of group
