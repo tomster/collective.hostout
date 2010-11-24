@@ -74,7 +74,7 @@ class Recipe:
         self.options.setdefault('parts','')
         self.options.setdefault('versionsfile','hostoutversions.cfg')
         default_path = '~%s/buildout'%self.options['user']
-        self.options.setdefault('path', self.options.get('remote_path','/var/lib/plone/%s'%name))
+        self.options.setdefault('path', self.options.get('remote_path','/var/buildout/%s'%name))
 #        self.extra_config = [s.strip() for s in self.options.get('extra_config','').split('\n') if s.strip()]
         self.options.setdefault('buildout_location',self.buildout_dir)
 
