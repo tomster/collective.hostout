@@ -48,11 +48,7 @@ def predeploy():
 
     #run('export http_proxy=localhost:8123') # TODO get this from setting
 
-    #if not contrib.files.exists(hostout.options['path'], use_sudo=True):
     if api.sudo("[ -e %s ]"%api.env.path).succeeded:
-    #try:
-    #    api.sudo("ls  %(path)s/bin/buildout " % dict(path = api.env.path), pty=True)
-    #except:
         hostout.bootstrap()
         hostout.setowners()
 
@@ -148,8 +144,8 @@ def bootstrap():
     cmd = getattr(api.env.hostout, 'bootstrap_python_%s'%hostos, api.env.hostout.bootstrap_python)
     cmd()
 
-    if not contrib.files.exists(api.env.path, use_sudo=True):
-        api.env.hostout.bootstrap_buildout()
+    cmd = getattr(api.env.hostout, 'bootstrap_buildout_%s'%hostos, api.env.hostout.bootstrap_buildout)
+    cmd()
 
 
 def setowners():
@@ -313,9 +309,12 @@ def bootstrap_python():
     version = api.env['python-version']
     major = '.'.join(version.split('.')[:2])
     majorshort = major.replace('.','')
+    d = dict(major=major)
+    
+    if api.run('python%(major)s --version'%d).succeeded:
+        return
 
     with cd('/tmp'):
-        d = dict(major=major)
         api.run('curl http://python.org/ftp/python/%(major)s/Python-%(major)s.tgz > Python-%(major)s.tgz'%d)
         api.run('tar xzf Python-%(major)s.tgz'%d)
         with cd('Python-%(major)s'%d):
