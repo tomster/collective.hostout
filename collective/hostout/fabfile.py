@@ -1,6 +1,6 @@
 import os
 import os.path
-from fabric import api
+from fabric import api, contrib
 from fabric.contrib.files import append
 from collective.hostout.hostout import buildoutuser
 from fabric.context_managers import cd
@@ -49,9 +49,10 @@ def predeploy():
     #run('export http_proxy=localhost:8123') # TODO get this from setting
 
     #if not contrib.files.exists(hostout.options['path'], use_sudo=True):
-    try:
-        api.sudo("ls  %(path)s/bin/buildout " % dict(path = api.env.path), pty=True)
-    except:
+    if api.sudo("[ -e %s ]"%api.env.path).succeeded:
+    #try:
+    #    api.sudo("ls  %(path)s/bin/buildout " % dict(path = api.env.path), pty=True)
+    #except:
         hostout.bootstrap()
         hostout.setowners()
 
@@ -141,22 +142,13 @@ def bootstrap():
     if not hostos:
         hostos = api.env.hostout.detecthostos()
         
-    users = getattr(api.env.hostout, 'bootstrap_users_%s'%hostos, None)
-    if users is not None:
-        users()
-    else:
-        api.env.hostout.bootstrap_users()
+    cmd = getattr(api.env.hostout, 'bootstrap_users_%s'%hostos, api.env.hostout.bootstrap_users)
+    cmd()
 
-    cmd = getattr(api.env.hostout, 'bootstrap_python_%s'%hostos, None)
-    if users is not None:
-        cmd()
-    else:
-        api.env.hostout.bootstrap_python()
+    cmd = getattr(api.env.hostout, 'bootstrap_python_%s'%hostos, api.env.hostout.bootstrap_python)
+    cmd()
 
-    try:
-        api.sudo("test -e  %(path)s/bin/buildout " % dict(path=api.env.path), pty=True)
-        return
-    except:
+    if not contrib.files.exists(api.env.path, use_sudo=True):
         api.env.hostout.bootstrap_buildout()
 
 
@@ -257,8 +249,8 @@ def bootstrap_buildout():
     api.sudo('%s bootstrap.py --distribute' % python)
 
 
-def bootstrap_python():
-    "Install python from source"
+def bootstrap_python_buildout():
+    "Install python from source via buildout"
     
     #TODO: need a better way to install from source that doesn't need svn or python
     
@@ -316,6 +308,21 @@ extra_options +=
         
     #ensure bootstrap files have correct owners
     hostout.setowners()
+
+def bootstrap_python():
+    version = api.env['python-version']
+    major = '.'.join(version.split('.')[:2])
+    majorshort = major.replace('.','')
+
+    with cd('/tmp'):
+        d = dict(major=major)
+        api.run('curl http://python.org/ftp/python/%(major)s/Python-%(major)s.tgz > Python-%(major)s.tgz'%d)
+        api.run('tar xzf Python-%(major)s.tgz'%d)
+        with cd('Python-%(major)s'%d):
+            api.run('./configure')
+            api.run('make')
+            api.sudo('make altinstall')    
+
 
 def bootstrap_python_ubuntu():
     """Update ubuntu with build tools, python and bootstrap buildout"""
