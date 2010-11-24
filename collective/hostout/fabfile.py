@@ -7,7 +7,30 @@ from fabric.context_managers import cd
 from pkg_resources import resource_filename
 
 
-def setupusers():
+def bootstrap():
+    hostos = api.env.get('hostos')
+    users = getattr(api.env.hostout, 'bootstrap_users_%s'%hostos, None)
+    if users is not None:
+        users()
+    else:
+        api.env.hostout.bootstrap_users()
+
+    cmd = getattr(api.env.hostout, 'bootstrap_python_%s'%hostos, None)
+    if users is not None:
+        cmd()
+    else:
+        api.env.hostout.bootstrap_python()
+
+    try:
+        api.sudo("test -e  %(path)s/bin/buildout " % dict(path=api.env.path), pty=True)
+        return
+    except:
+        pass
+
+    api.env.hostout.bootstrap_buildout()
+
+
+def bootstrap_users():
     """ create users if needed """
 
     hostout = api.env.get('hostout')
@@ -30,7 +53,184 @@ def setupusers():
         api.sudo('touch ~%s/.ssh/authorized_keys' % owner)
         append(key, '~%s/.ssh/authorized_keys' % owner, use_sudo=True)
         api.sudo("chown -R %(owner)s ~%(owner)s/.ssh" % locals() )
+
+
+
+def bootstrap_python():
+    "Install python from source"
     
+    path = api.env.path
+
+    BUILDOUT = """
+[buildout]
+extends =
+      src/base.cfg
+      src/readline.cfg
+      src/libjpeg.cfg
+      src/python%(majorshort)s.cfg
+      src/links.cfg
+
+parts =
+      ${buildout:base-parts}
+      ${buildout:readline-parts}
+      ${buildout:libjpeg-parts}
+      ${buildout:python%(majorshort)s-parts}
+      ${buildout:links-parts}
+
+# ucs4 is needed as lots of eggs like lxml are also compiled with ucs4 since most linux distros compile with this      
+[python-%(major)s-build:default]
+extra_options +=
+    --enable-unicode=ucs4
+      
+"""
+
+
+    
+    hostout = api.env.hostout
+    hostout = api.env.get('hostout')
+    buildout = api.env['buildout-user']
+    effective = api.env['effective-user']
+    buildoutgroup = api.env['buildout-group']
+
+    #hostout.setupusers()
+    api.sudo('mkdir -p %(path)s' % locals())
+    hostout.setowners()
+
+    version = api.env['python-version']
+    major = '.'.join(version.split('.')[:2])
+    majorshort = major.replace('.','')
+    api.sudo('mkdir -p /var/buildout-python')
+    with cd('/var/buildout-python'):
+        #api.sudo('wget http://www.python.org/ftp/python/%(major)s/Python-%(major)s.tgz'%locals())
+        #api.sudo('tar xfz Python-%(major)s.tgz;cd Python-%(major)s;./configure;make;make install'%locals())
+
+        api.sudo('svn co http://svn.plone.org/svn/collective/buildout/python/')
+        with cd('python'):
+            api.sudo('curl -O http://python-distribute.org/distribute_setup.py')
+            api.sudo('python distribute_setup.py')
+            api.sudo('python bootstrap.py --distribute')
+            append(BUILDOUT%locals(), 'buildout.cfg', use_sudo=True)
+            api.sudo('bin/buildout')
+    api.env['python'] = "source /var/buildout-python/python/python-%(major)s/bin/activate; python "
+        
+    #api.env.cwd = api.env.path
+    #api.sudo('wget -O bootstrap.py http://python-distribute.org/bootstrap.py')
+    #api.sudo('echo "[buildout]" > buildout.cfg')
+    #api.sudo('source /var/buildout-python/python/python-%(major)s/bin/activate; python bootstrap.py --distribute' % locals())
+    #api.sudo('chown -R %(buildout)s:%(buildoutgroup)s /var/buildout-python '%locals())
+
+    #ensure bootstrap files have correct owners
+    hostout.setowners()
+
+def bootstrap_python_ubuntu():
+    """Update ubuntu with build tools, python and bootstrap buildout"""
+    hostout = api.env.get('hostout')
+    path = api.env.path
+ 
+    # Add the plone user:
+    hostout.setupusers()
+    api.sudo('mkdir -p %(path)s' % locals())
+    hostout.setowners()
+
+    #http://wiki.linuxquestions.org/wiki/Find_out_which_linux_distribution_a_system_belongs_to
+    d = api.run(
+    #    "[ -e /etc/SuSE-release ] && echo SuSE "
+    #            "[ -e /etc/redhat-release ] && echo redhat"
+    #            "[ -e /etc/fedora-release ] && echo fedora || "
+                "lsb_release -rd "
+    #            "[ -e /etc/debian-version ] && echo debian or ubuntu || "
+    #            "[ -e /etc/slackware-version ] && echo slackware"
+               )
+    print d
+    api.run('uname -r')
+
+#    api.sudo('apt-get -y update')
+#    api.sudo('apt-get -y upgrade ')
+    
+    
+    version = api.env['python-version']
+    major = '.'.join(version.split('.')[:2])
+    
+    #Install and Update Dependencies
+
+    #contrib.files.append(apt_source, '/etc/apt/source.list', use_sudo=True)
+    api.sudo('apt-get -yq install '
+             'build-essential '
+#             'python%(major)s python%(major)s-dev '
+#             'python-libxml2 '
+#             'python-elementtree '
+#             'python-celementtree '
+             'ncurses-dev '
+             'libncurses5-dev '
+# needed for lxml on lucid
+             'libz-dev '
+             'libdb4.6 '
+             'libxp-dev '
+             'libreadline5 '
+             'libreadline5-dev '
+             'libbz2-dev '
+             % locals())
+
+    try:
+        api.sudo('apt-get -yq install python%(major)s python%(major)s-dev '%locals())
+        #install buildout
+        api.env.cwd = api.env.path
+        api.sudo('wget -O bootstrap.py http://python-distribute.org/bootstrap.py')
+        api.sudo('echo "[buildout]" > buildout.cfg')
+        api.sudo('python%(major)s bootstrap.py' % locals())
+    except:
+        hostout.bootstrapsource()
+
+    #api.sudo('apt-get -yq update; apt-get dist-upgrade')
+
+#    api.sudo('apt-get install python2.4=2.4.6-1ubuntu3.2.9.10.1 python2.4-dbg=2.4.6-1ubuntu3.2.9.10.1 \
+# python2.4-dev=2.4.6-1ubuntu3.2.9.10.1 python2.4-doc=2.4.6-1ubuntu3.2.9.10.1 \
+# python2.4-minimal=2.4.6-1ubuntu3.2.9.10.1')
+    #wget http://mirror.aarnet.edu.au/pub/ubuntu/archive/pool/main/p/python2.4/python2.4-minimal_2.4.6-1ubuntu3.2.9.10.1_i386.deb -O python2.4-minimal.deb
+    #wget http://mirror.aarnet.edu.au/pub/ubuntu/archive/pool/main/p/python2.4/python2.4_2.4.6-1ubuntu3.2.9.10.1_i386.deb -O python2.4.deb
+    #wget http://mirror.aarnet.edu.au/pub/ubuntu/archive/pool/main/p/python2.4/python2.4-dev_2.4.6-1ubuntu3.2.9.10.1_i386.deb -O python2.4-dev.deb
+    #sudo dpkg -i python2.4-minimal.deb python2.4.deb python2.4-dev.deb
+    #rm python2.4-minimal.deb python2.4.deb python2.4-dev.deb
+
+    # python-profiler?
+    
+
+    #ensure bootstrap files have correct owners
+    hostout.setowners()
+
+    
+
+def bootstrap_buildout():
+    """ Create an initialised buildout directory """
+    # bootstrap assumes that correct python is already installed
+    path = api.env.path
+    buildout = api.env['buildout-user']
+    buildoutgroup = api.env['buildout-group']
+    api.sudo('mkdir -p %(path)s' % locals())
+    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s %(path)s'%locals())
+
+    buildoutcache = api.env['buildout-cache']
+    api.sudo('mkdir -p %s/eggs' % buildoutcache)
+    api.sudo('mkdir -p %s/downloads/dist' % buildoutcache)
+    api.sudo('mkdir -p %s/extends' % buildoutcache)
+    api.sudo('chown -R %s:%s %s' % (buildout, buildoutgroup, buildoutcache))
+    api.env.cwd = api.env.path
+   
+    bootstrap = resource_filename(__name__, 'bootstrap.py')
+    api.put(bootstrap, '%s/bootstrap.py' % path)
+    
+    # put in simplest buildout to get bootstrap to run
+    api.sudo('echo "[buildout]" > buildout.cfg')
+
+    python = api.env.get('python')
+    if not python:
+        
+        version = api.env['python-version']
+        major = '.'.join(version.split('.')[:2])
+        python = "python%s" % major
+
+    api.sudo('%s bootstrap.py --distribute' % python)
+
 
 def setowners():
     """ Ensure ownership and permissions are correct on buildout and cache """
@@ -106,33 +306,6 @@ def predeploy():
     api.env.cwd = ''
 
 
-def bootstrap():
-#    api.env.hostout.setupusers()
-
-    # bootstrap assumes that correct python is already installed
-    path = api.env.path
-    buildout = api.env['buildout-user']
-    buildoutgroup = api.env['buildout-group']
-    api.sudo('mkdir -p %(path)s' % locals())
-    api.sudo('chown -R %(buildout)s:%(buildoutgroup)s %(path)s'%locals())
-
-    buildoutcache = api.env['buildout-cache']
-    api.sudo('mkdir -p %s/eggs' % buildoutcache)
-    api.sudo('mkdir -p %s/downloads/dist' % buildoutcache)
-    api.sudo('mkdir -p %s/extends' % buildoutcache)
-    api.sudo('chown -R %s:%s %s' % (buildout, buildoutgroup, buildoutcache))
-    api.env.cwd = api.env.path
-   
-    bootstrap = resource_filename(__name__, 'bootstrap.py')
-    api.put(bootstrap, '%s/bootstrap.py' % path)
-    
-    # put in simplest buildout to get bootstrap to run
-    api.sudo('echo "[buildout]" > buildout.cfg')
-
-    version = api.env['python-version']
-    major = '.'.join(version.split('.')[:2])
-
-    api.sudo('python%(major)s bootstrap.py --distribute' % locals())
 
 
 @buildoutuser
@@ -184,7 +357,7 @@ def uploadbuildout():
 
 @buildoutuser
 def buildout():
-    """Run the buildout on the remote server """
+    """ Run the buildout on the remote server """
 
     hostout = api.env.hostout
     hostout_file=hostout.getHostoutFile()
@@ -228,4 +401,15 @@ def sudo(*cmd):
     api.env.cwd = api.env.path
     api.sudo(' '.join(cmd))
 
+@buildoutuser
+def put(file, target=None):
+    if not target:
+        target = file
+    api.put(file, target)
 
+@buildoutuser
+def get(file, target=None):
+    if not target:
+        target = file
+    with cd(api.env.path):
+        api.get(file, target)
