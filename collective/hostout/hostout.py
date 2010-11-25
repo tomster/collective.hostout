@@ -123,6 +123,7 @@ class HostOut:
         if not self.buildout_cache:
             install_base = os.path.dirname(self.getRemoteBuildoutPath())
             self.buildout_cache = os.path.join(install_base,'buildout-cache')
+            opt['buildout-cache'] = self.buildout_cache
 
 
         self.fabfiles = [p.strip() for p in opt.get('fabfiles','').split() if p.strip()] 
