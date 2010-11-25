@@ -48,7 +48,10 @@ def predeploy():
 
     #run('export http_proxy=localhost:8123') # TODO get this from setting
 
-    if api.sudo("[ -e %s ]"%api.env.path).succeeded:
+    #if api.sudo("[ -e %s ]"%api.env.path, pty=True).succeeded:
+    try:
+        api.sudo("[ -e %s ]"%api.env.path, pty=True)
+    except:
         hostout.bootstrap()
         hostout.setowners()
 
@@ -236,13 +239,14 @@ def bootstrap_buildout():
     api.sudo('echo "[buildout]" > buildout.cfg')
 
     python = api.env.get('python')
-    if not python:
+    if not python or python == 'buildout':
         
         version = api.env['python-version']
         major = '.'.join(version.split('.')[:2])
         python = "python%s" % major
 
-    api.sudo('%s bootstrap.py --distribute' % python)
+    with cd(api.env.path):
+        api.sudo('%s bootstrap.py --distribute' % python)
 
 
 def bootstrap_python_buildout():
@@ -311,7 +315,13 @@ def bootstrap_python():
     majorshort = major.replace('.','')
     d = dict(major=major)
     
-    if api.run('python%(major)s --version'%d).succeeded:
+    
+    #if api.run('python%(major)s --version'%d).succeeded:
+    try:
+        api.run('python%(major)s --version'%d)
+    except:
+        pass
+    else:
         return
 
     with cd('/tmp'):
@@ -425,7 +435,6 @@ def detecthostos():
                 "([ -e /etc/debian-version ] && echo ubuntu) || "
                 "([ -e /etc/slackware-version ] && echo slackware)"
                )
-    api.run('uname -r')
     print "Detected Hostos = %s" % hostos
     api.env['hostos'] = hostos
     return hostos
