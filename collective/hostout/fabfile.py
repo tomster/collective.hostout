@@ -137,15 +137,25 @@ def postdeploy():
 def bootstrap():
     """ Install packages and users needed to get buildout running """
     hostos = api.env.get('hostos')
+    version = api.env['python-version']
+    major = '.'.join(version.split('.')[:2])
+    majorshort = major.replace('.','')
+    d = dict(major=major)
 
     if not hostos:
         hostos = api.env.hostout.detecthostos()
         
     cmd = getattr(api.env.hostout, 'bootstrap_users_%s'%hostos, api.env.hostout.bootstrap_users)
     cmd()
-
-    cmd = getattr(api.env.hostout, 'bootstrap_python_%s'%hostos, api.env.hostout.bootstrap_python)
-    cmd()
+    
+    
+    
+    #if api.run('python%(major)s --version'%d).succeeded:
+    try:
+        api.run('python%(major)s --version'%d)
+    except:
+        cmd = getattr(api.env.hostout, 'bootstrap_python_%s'%hostos, api.env.hostout.bootstrap_python)
+        cmd()
 
     cmd = getattr(api.env.hostout, 'bootstrap_buildout_%s'%hostos, api.env.hostout.bootstrap_buildout)
     cmd()
@@ -316,19 +326,14 @@ def bootstrap_python():
     d = dict(major=major)
     
     
-    #if api.run('python%(major)s --version'%d).succeeded:
-    try:
-        api.run('python%(major)s --version'%d)
-    except:
-        pass
-    else:
-        return
-
     with cd('/tmp'):
         api.run('curl http://python.org/ftp/python/%(major)s/Python-%(major)s.tgz > Python-%(major)s.tgz'%d)
         api.run('tar xzf Python-%(major)s.tgz'%d)
         with cd('Python-%(major)s'%d):
-            api.run('./configure')
+#            api.run("sed 's/#readline/readline/' Modules/Setup.dist > TMPFILE && mv TMPFILE Modules/Setup.dist")
+#            api.run("sed 's/#_socket/_socket/' Modules/Setup.dist > TMPFILE && mv TMPFILE Modules/Setup.dist")
+            
+            api.run('./configure  --enable-unicode=ucs4 --with-threads --with-readline --with-dbm --with-zlib --with-ssl --with-bz2')
             api.run('make')
             api.sudo('make altinstall')    
 
@@ -347,7 +352,6 @@ def bootstrap_python_ubuntu():
     #contrib.files.append(apt_source, '/etc/apt/source.list', use_sudo=True)
     api.sudo('apt-get -yq install '
              'build-essential '
-#             'python%(major)s python%(major)s-dev '
 #             'python-libxml2 '
 #             'python-elementtree '
 #             'python-celementtree '
@@ -360,7 +364,10 @@ def bootstrap_python_ubuntu():
              'libreadline5 '
              'libreadline5-dev '
              'libbz2-dev '
-             % locals())
+             'libssl-dev '
+             #'openssl '
+             #'openssl-dev '
+             )
 
     try:
         api.sudo('apt-get -yq install python%(major)s python%(major)s-dev '%locals())
@@ -404,10 +411,11 @@ def bootstrap_python_redhat():
              'libxml2-python '
              'python-elementtree '
              'ncurses-devel '
-             'zlib-devel '
              'zlib zlib-devel '
              'readline-devel '
-             'bzip2-devel ')
+             'bzip2-devel '
+             'openssl openssl-dev '
+             )
 
 #optional stuff
 #    api.sudo('yum -y install ' +
