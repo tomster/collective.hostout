@@ -106,7 +106,7 @@ Once we bootstrap and build this::
   $> python bootstrap.py -c base.cfg
   $> bin/buildout -c base.cfg
   
-we have a working wsgi app if you run
+we have a working wsgi app if you run ::
 
   $> bin/paster serve parts/demo/paster.ini
   
@@ -116,7 +116,7 @@ Production buildout
 Next you will create a "production buildout" which extends your base.cfg.
 This might contain parts to install webservers, databases, caching servers etc.
 
-Our prod.cfg is very simple
+Our prod.cfg is very simple ::
 
   [buildout]
   extends = base.cfg
@@ -134,7 +134,7 @@ Our prod.cfg is very simple
 Deployment buildout
 -------------------
 
-Now create a 3rd buildout file, called buildout.cfg. This will be our deployment/deployment
+Now create a 3rd buildout file, called buildout.cfg. This will be our development/deployment
 buildout ::
 
     [buildout]
@@ -170,7 +170,7 @@ as these will not be pinned for you.
 Running hostout deploy for the first time
 -----------------------------------------
 
-The bin/hostout command takes two kinds parameters, ::
+The bin/hostout command takes three kinds of parameters, ::
 
  hostout [hostname(s)] [commands] [command arguments]
  
@@ -197,11 +197,11 @@ Once hostout bootstrap has ensured a working remote buildout, deployment will co
 by running the following commands
   
 1. "uploadeggs": Any develop eggs are released as eggs and uploaded to the server. These will
- uploaded directly into the buildouts buidout-cache/downloads/dist directory which buildout
- uses find packages before looking up the package index. It's very important your development
- packages package properly by including all the relevent files. The easiest way to do this
- is by using source control, checking in all your source files and installing the relevent
- setuptools plugin for your source control. e.g. for git do "easy_install setuptools-git"
+uploaded directly into the buildouts buidout-cache/downloads/dist directory which buildout
+uses find packages before looking up the package index. It's very important your development
+packages package properly by including all the relevent files. The easiest way to do this
+is by using source control, checking in all your source files and installing the relevent
+setuptools plugin for your source control. e.g. for git do "easy_install setuptools-git"
   
 2. "uploadbuildout": The relevent .cfg files and any files/directories in the "include"
 paramater are synced to the remote server.
@@ -242,11 +242,11 @@ Other Builtin Commands
 
 Hostout comes with a set of helpful commands. You can show this list by
 not specifying any command at all. The list of commands will vary depending
-on what fabfiles your hostout references.
+on what fabfiles your hostout references. ::
 
->>> print system('bin/hostout host1')
-cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
-Valid commands are:
+ $> bin/hostout host1
+ cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
+ Valid commands are:
    bootstrap        : Install python and users needed to run buildout
    buildout         : Run the buildout on the remote server
    deploy           : predeploy, uploadeggs, uploadbuildout, buildout and then postdeploy
@@ -258,27 +258,27 @@ Valid commands are:
    sudo             : Execute cmd on remote as root user
    uploadbuildout   : Upload buildout pinned to local picked versions + uploaded eggs
    uploadeggs       : Any develop eggs are released as eggs and uploaded to the server
-<BLANKLINE>
 
-The run command is helpful to run quick remote commands as the buildout user on the remote host
 
->>> print system('bin/hostout host1 run pwd')
-Hostout: Running command 'run' from collective.hostout
-Logging into the following hosts as root:
-    127.0.0.1
-[127.0.0.1] run: sh -c "cd /var/host1 && pwd"
-[127.0.0.1] out: ...
-Done.
+The run command is helpful to run quick remote commands as the buildout user on the remote host ::
 
-We can also use our login user and password to run quick sudo commands
+ $> bin/hostout host1 run pwd
+ Hostout: Running command 'run' from collective.hostout
+ Logging into the following hosts as root:
+     127.0.0.1
+ [127.0.0.1] run: sh -c "cd /var/host1 && pwd"
+ [127.0.0.1] out: ...
+ Done.
 
->>> print system('bin/hostout host1 sudo cat /etc/hosts')
-Hostout: Running command 'sudo' from collective.hostout
-Logging into the following hosts as root:
-    127.0.0.1
-[127.0.0.1] run: sh -c "cd /var/host1 && cat/etc/hosts"
-[127.0.0.1] out: ...
-Done.
+We can also use our login user and password to run quick sudo commands ::
+
+ $> bin/hostout host1 sudo cat /etc/hosts 
+ Hostout: Running command 'sudo' from collective.hostout
+ Logging into the following hosts as root:
+     127.0.0.1
+ [127.0.0.1] run: sh -c "cd /var/host1 && cat/etc/hosts" 
+ [127.0.0.1] out: ...
+ Done.
 
 
 Detailed Hostout Options
@@ -495,12 +495,18 @@ and merge any fabfiles and other configuration options from that recipe into
 your current hostout configuration.  The following are examples of builtin
 plugins.  Others are available on pypi.
 
-see hostout.cloud_, hostout.supervisor_, hostout.ubuntu_ or
-hostout.mrdeveloper for examples.
+hostout.cloud_
+  Will create VM instances automatically for you on many popular hosting services such
+  as Amazon, Rackspace and Slicehost
+
+hostout.supervisor_
+  Will stop a supervisor before buildout is run and restart it afterwards. It provides
+  some short commands to quickly manage your applications from your hostout
+  commandline
+
 
 .. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
 .. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
-.. _hostout.ubuntu: http://pypi.python.org/pypi/hostout.ubuntu
 
 
 
