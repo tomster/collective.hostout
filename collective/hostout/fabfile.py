@@ -350,6 +350,7 @@ def bootstrap_python_ubuntu():
     #Install and Update Dependencies
 
     #contrib.files.append(apt_source, '/etc/apt/source.list', use_sudo=True)
+    api.sudo('apt-get -yq update ')
     api.sudo('apt-get -yq install '
              'build-essential '
 #             'python-libxml2 '
