@@ -345,6 +345,12 @@ buildout-cache
 python-version
   The version of python to install during bootstrapping. Defaults to version
   used in the local buildout.
+  
+hostos
+  Over which platform specific bootstrap_python command is called. For instance
+  if hostos=redhat, bootstrap_python_redhat will be called to use "yum" to
+  install python and other developer tools. This paramter is also used in
+  hostout.cloud_ to pick which VM to create.
 
 
 Users and logins
