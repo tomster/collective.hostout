@@ -1,24 +1,23 @@
-Hostout 
-=======
-
-Standarised deployment of buildout based applications with Fabric_
+Hostout - standarised deployment of buildout_ based applications with Fabric_
+=============================================================================
 
 Hostout gives you:
 
-- the ability to configure your Farbic_ commands from within buildout
+- the ability to configure your Farbic_ commands from within buildout_
 - a framework for integrating different Fabric_ scripts via setup tools packages
-- an out of the box deployment command for buildout based applications
+- an out of the box deployment command for buildout_ based applications
 - plugins to integrate deployment with supervisord and libcloud
 
 Hostout is built around two ideas :-
 
-1. Sharing Fabric command configuration amongst developers in a team
+1. Sharing Fabric_ command configuration amongst developers in a team
 so where and how your applications is deployed becomes configuration, not
 documentation. Deployment then becomes a single action by any member of the team.
 
 2. Sharing fabric scripts via PyPi so we don't have to reinvent ways
 to deploy or manage hosted applications
 
+To contribute :-
 
 - Code repository: http://github.com/collective/collective.hostout
 - Questions and comments to http://github.com/collective/collective.hostout/issues
@@ -238,6 +237,48 @@ In our example above deployment would look something like this ::
 
 Now if you visit myhost.com you will see your web application shared with the world
 
+Other Builtin Commands
+**********************
+
+Hostout comes with a set of helpful commands. You can show this list by
+not specifying any command at all. The list of commands will vary depending
+on what fabfiles your hostout references.
+
+>>> print system('bin/hostout host1')
+cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
+Valid commands are:
+   bootstrap        : Install python and users needed to run buildout
+   buildout         : Run the buildout on the remote server
+   deploy           : predeploy, uploadeggs, uploadbuildout, buildout and then postdeploy
+   postdeploy       : Perform any final plugin tasks
+   predeploy        : Install buildout and its dependencies if needed. Hookpoint for plugins
+   setupusers       : create buildout and the effective user and allow hostout access
+   setowners        : Ensure ownership and permissions are correct on buildout and cache
+   run              : Execute cmd on remote as login user
+   sudo             : Execute cmd on remote as root user
+   uploadbuildout   : Upload buildout pinned to local picked versions + uploaded eggs
+   uploadeggs       : Any develop eggs are released as eggs and uploaded to the server
+<BLANKLINE>
+
+The run command is helpful to run quick remote commands as the buildout user on the remote host
+
+>>> print system('bin/hostout host1 run pwd')
+Hostout: Running command 'run' from collective.hostout
+Logging into the following hosts as root:
+    127.0.0.1
+[127.0.0.1] run: sh -c "cd /var/host1 && pwd"
+[127.0.0.1] out: ...
+Done.
+
+We can also use our login user and password to run quick sudo commands
+
+>>> print system('bin/hostout host1 sudo cat /etc/hosts')
+Hostout: Running command 'sudo' from collective.hostout
+Logging into the following hosts as root:
+    127.0.0.1
+[127.0.0.1] run: sh -c "cd /var/host1 && cat/etc/hosts"
+[127.0.0.1] out: ...
+Done.
 
 
 Detailed Hostout Options
@@ -274,18 +315,6 @@ buildout
   The configuration file you which to build on the remote host. Note this doesn't have
   to be the same .cfg as the hostout section is in but the versions of the eggs will be determined
   from the buildout with the hostout section in. Defaults to buildout.cfg
-
-effective-user
-  This user will own the buildouts var files. This allows the application to write to database files
-  in the var directory but not be allowed to write to any other part of teh buildout code.
-  
-buildout-user
-  The user which will own the buildout files. During bootstrap this user will be created and be given a ssh key
-  such that hostout can login and run buildout using this account.
-
-buildout-group
-  A group which will own the buildout files including the var files. This group is created if needed in the bootstrap
-  command.
   
 
 path
@@ -318,8 +347,22 @@ python-version
   used in the local buildout.
 
 
+Users and logins
+----------------
 
+#TODO
 
+effective-user
+  This user will own the buildouts var files. This allows the application to write to database files
+  in the var directory but not be allowed to write to any other part of teh buildout code.
+  
+buildout-user
+  The user which will own the buildout files. During bootstrap this user will be created and be given a ssh key
+  such that hostout can login and run buildout using this account.
+
+buildout-group
+  A group which will own the buildout files including the var files. This group is created if needed in the bootstrap
+  command.
 
 
 
@@ -461,93 +504,6 @@ hostout.mrdeveloper for examples.
 
 
 
-Builtin Commands
-****************
-
-Hostout comes with a set of helpful commands. You can show this list by
-not specifying any command at all. The list of commands will vary depending
-on what fabfiles your hostout references.
-
->>> print system('bin/hostout host1')
-cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
-Valid commands are:
-   bootstrap        : Install python and users needed to run buildout
-   buildout         : Run the buildout on the remote server
-   deploy           : predeploy, uploadeggs, uploadbuildout, buildout and then postdeploy
-   postdeploy       : Perform any final plugin tasks
-   predeploy        : Install buildout and its dependencies if needed. Hookpoint for plugins
-   setupusers       : create buildout and the effective user and allow hostout access
-   setowners        : Ensure ownership and permissions are correct on buildout and cache
-   run              : Execute cmd on remote as login user
-   sudo             : Execute cmd on remote as root user
-   uploadbuildout   : Upload buildout pinned to local picked versions + uploaded eggs
-   uploadeggs       : Any develop eggs are released as eggs and uploaded to the server
-<BLANKLINE>
-
-The run command is helpful to run quick remote commands as the buildout user on the remote host
-
->>> print system('bin/hostout host1 run pwd')
-Hostout: Running command 'run' from collective.hostout
-Logging into the following hosts as root:
-    127.0.0.1
-[127.0.0.1] run: sh -c "cd /var/host1 && pwd"
-[127.0.0.1] out: ...
-Done.
-
-We can also use our login user and password to run quick sudo commands
-
->>> print system('bin/hostout host1 sudo cat /etc/hosts')
-Hostout: Running command 'sudo' from collective.hostout
-Logging into the following hosts as root:
-    127.0.0.1
-[127.0.0.1] run: sh -c "cd /var/host1 && cat/etc/hosts"
-[127.0.0.1] out: ...
-Done.
-
-Hostout, users and logins
-*************************
-
-#TODO
-
-effective-user
-  This user will own the buildouts var files. This allows the application to write to database files
-  in the var directory but not be allowed to write to any other part of teh buildout code.
-  
-buildout-user
-  The user which will own the buildout files. During bootstrap this user will be created and be given a ssh key
-  such that hostout can login and run buildout using this account.
-
-buildout-group
-  A group which will own the buildout files including the var files. This group is created if needed in the bootstrap
-  command.
-  
-
-
-Definitions
-***********
-
-buildout
-  zc.buildout is a tool for creating an isolated environment for running applications. It is controlled
-  by a configuration file(s) called a buidout file.
-
-buildout recipe
-  A buildout file consists of parts each of which has a recipe which is in charge of installing a particular
-  piece of softare. 
-  
-deploy
-  Take a an application you are developing and move it to a host server for use. Often deployment will be
-  to a staging location for limited use in testing or production for mainstream use. Production, staging
-  and development often have different but related to buildouts and could involve different numbers of hosts
-  for each.
-
-host
-  In the context of this document this a machine or VPS running linux which you would like to deploy your
-  application to.
-
-fabric file
-  see fabric_
-
-
 
 Why hostout
 ***********
@@ -574,7 +530,6 @@ Egg Proxies
    TODO
 
  
-
 
 Using hostout with a python2.4 buildout
 ***************************************
@@ -628,12 +583,14 @@ build it for you.
 Credits
 *******
 
-Dylan Jay ( software at pretaweb dot com )
+Dylan Jay ( software at pretaweb_ dot com )
 
 
 .. _recipe: http://pypi.python.org/pypi/zc.buildout#recipes
 .. _fabric: http://fabfile.org
+.. _Fabric: http://fabfile.org
 .. _buildout: http://www.buildout.org
+.. _pretaweb: http://www.pretaweb.com
 
 
 
