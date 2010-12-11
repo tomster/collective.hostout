@@ -35,7 +35,7 @@ remote server with based on your local buildout.
 
 You don't need to learn Fabric_ to use hostout but you will need to learn buildout_.
 The good news is that many buildout's and snippets already exist for building django,
-pylons, pyrimid, plone, zope, varnish, apache, haproxy or whichever server side
+pylons, pyramid, plone, zope, varnish, apache, haproxy or whichever server side
 technology you want to deploy.
 
 Users of hostout will be interested in
