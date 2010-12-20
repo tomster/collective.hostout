@@ -35,7 +35,7 @@ remote server with based on your local buildout.
 
 You don't need to learn Fabric_ to use hostout but you will need to learn buildout_.
 The good news is that many buildout's and snippets already exist for building django,
-pylons, pyrimid, plone, zope, varnish, apache, haproxy or whichever server side
+pylons, pyramid, plone, zope, varnish, apache, haproxy or whichever server side
 technology you want to deploy.
 
 Users of hostout will be interested in
@@ -356,19 +356,34 @@ hostos
 Users and logins
 ----------------
 
-#TODO
+The bootstrap_users command is called as part of the bootstrap process which is called if no buildout has
+already been bootstraped on the remote server. This command will login using "user" 
+(the user should have sudo rights) and create two additional users and a group which joins them.
 
 effective-user
   This user will own the buildouts var files. This allows the application to write to database files
-  in the var directory but not be allowed to write to any other part of teh buildout code.
+  in the var directory but not be allowed to write to any other part of the buildout code.
   
 buildout-user
   The user which will own the buildout files. During bootstrap this user will be created and be given a ssh key
   such that hostout can login and run buildout using this account.
 
 buildout-group
-  A group which will own the buildout files including the var files. This group is created if needed in the bootstrap
+  A group which will own the buildout files including the var files. This group is created if needed in the bootstrap_users
   command.
+
+In addition the private key will be read from the location "identity_file" and be used to create 
+a password-less login for the "buildout-user" account by copying the public key into the "authorized_keys"
+file of the buildout_user account. If no file exists for "identity_file" a DSA private key is created for you
+in the file "${hostname}_key" in the buildout directory.
+During a normal deployment all steps are run as the buildout-user so there is no need to use the "user" account
+and therefore supply a password. The exception to this is if you specify "pre-deploy", "post-deploy" or "sudo-parts" steps
+or have to bootstrap the server. These require the use of the sudo-capable "user" account.
+If you'd like to share the ability to deploy your application with others, one way to do this is to simply
+checkin the private key file specified by "identity_file" along with your buildout. If you do share deployment, 
+remember to pin your eggs in your buildout so the result is consistent no matter where  it is deployed from. One trick 
+you can use to achieve this is to add "hostoutversions.cfg" to the "extends" of your buildout and commit
+"hostoutversions.cfg" to your source control as well.
 
 
 
