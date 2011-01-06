@@ -7,18 +7,21 @@ Release History
 1.0a4 (??)
 ----------
 - using decorators for setting user used for command
-- cleaned up user adding code. renamed to setupusers
-- BUG: two hostout parts with different extends= values won't create two seperate command stacks
-  but instead one combined one
-- merged hostout.ubuntu and hostout.redhat back into core.
+- cleaned up user adding code. renamed to bootstrap_users
+- BUG: two hostout parts with different extends= values won't create two separate command stacks
+  but instead one combined one. 
+- BUG: extends was global to all hostouts [Fulvio Casali]
+- merged hostout.ubuntu and hostout.redhat back into core. These are now deprecated.
 - broke bootstrap step into bootstrap_users bootstrap_python bootstrap_buildout
 - will install python from source if no specific os bootstrap_python available.
 - change default buildout path to /var/buildout/PARTNAME
 - hellowsgi demo included in code make for simple tests
-- os specific bootstrap installs much less. only whats needed for basic buildout
+- os specific bootstrap installs much less. only what's needed for basic buildout
 - move to the github collective.
 - new "shell" parameter to specify which shell you want commands executed as.
-- improvements to setpermissions including suid for directories.
+- improvements to setowners including suid for directories.
+- changes to make more freebsd friendly (Tom Lazar)
+- setowners on every deployment
 
 1.0a3 (??)
 ----------
