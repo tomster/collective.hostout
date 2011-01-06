@@ -1,27 +1,14 @@
-Hostout - standardized deployment of buildout_ based applications with Fabric_
+Hostout - standardised deployment of buildout_ based applications with Fabric_
 ==============================================================================
 
 Hostout gives you:
 
-- the ability to configure your Farbic_ commands from within buildout_
+- the ability to configure your Fabric_ commands from within buildout_
 - a framework for integrating different Fabric_ scripts via setup tools packages
 - an out of the box deployment command for buildout_ based applications
-- plugins to integrate deployment with supervisord and libcloud
+- plugins to integrate deployment further such as  hostout.supervisor_ and 
+  hostout.cloud_
 
-Hostout is built around two ideas :-
-
-1. Sharing Fabric_ command configuration amongst developers in a team
-so where and how your applications is deployed becomes configuration, not
-documentation. Deployment then becomes a single action by any member of the team.
-
-2. Sharing fabric scripts via PyPi so we don't have to reinvent ways
-to deploy or manage hosted applications
-
-To contribute :-
-
-- Code repository: http://github.com/collective/collective.hostout
-- Questions and comments to http://github.com/collective/collective.hostout/issues
-- Report bugs at http://github.com/collective/collective.hostout/issues
 
 .. contents::
 
@@ -33,15 +20,33 @@ Hostout is a framework for managing remote buildouts via fabric scripts. It
 includes many helpful built-in commands to package, deploy and bootstrap a
 remote server with based on your local buildout.
 
+Hostout is built around two ideas :-
+
+1. Sharing your configuration of deployment for an application in the same
+buildout_ you share with your developers in a team so where and how your applications 
+is deployed is automated rather than documentation. 
+Deployment then becomes a simple command by any member of the team.
+
+2. Sharing fabric scripts via PyPi so we don't have to reinvent ways
+to deploy or manage hosted applications
+
+If you are already a user of Fabric and buildout but aren't interested in the built in hostout's built
+in ability to deploy then skip ahead to `Integrating Fabric into buildout`_.
+
 You don't need to learn Fabric_ to use hostout but you will need to learn buildout_.
 The good news is that many buildouts and snippets already exist for building django,
 pylons, pyramid, plone, zope, varnish, apache, haproxy or whichever server side
 technology you want to deploy.
 
-Users of hostout will be interested in
 
-- Intergrating your fabfiles into buildout, or
-- Deploying your buildout using hostout
+To Contribute
+*************
+
+To contribute :-
+
+- Code repository: http://github.com/collective/collective.hostout
+- Questions and comments to http://github.com/collective/collective.hostout/issues
+- Report bugs at http://github.com/collective/collective.hostout/issues
 
 
 Hostout deploy
@@ -182,8 +187,8 @@ The first thing will do is ask you your password and attempt to login in to your
 server. It will then look for ``/var/buildout/demo/bin/buildout`` and when it doesn't
 find it it will automatically run another hostout command called ``bootstrap``.
 
-Bootstrap is further broken down into three commands, bootstrap_users_,
-bootstrap_python_ and bootstrap_buildout_. These will create an additional user
+Bootstrap is further broken down into three commands, bootstrap_users,
+bootstrap_python and bootstrap_buildout. These will create an additional user
 to build and run your application, install basic system packages needed to
 run buildout and install buildout into your remote path. It will attempt to
 detect which version of linux your server is running to os python, but if this
@@ -250,11 +255,12 @@ on what fabfiles your hostout references. ::
  cmdline is: bin/hostout host1 [host2...] [all] cmd1 [cmd2...] [arg1 arg2...]
  Valid commands are:
    bootstrap        : Install python and users needed to run buildout
+   bootstrap_python : 
+   bootstrap_users  : create buildout and the effective user and allow hostout access
    buildout         : Run the buildout on the remote server
    deploy           : predeploy, uploadeggs, uploadbuildout, buildout and then postdeploy
    postdeploy       : Perform any final plugin tasks
    predeploy        : Install buildout and its dependencies if needed. Hookpoint for plugins
-   setupusers       : create buildout and the effective user and allow hostout access
    setowners        : Ensure ownership and permissions are correct on buildout and cache
    run              : Execute cmd on remote as login user
    sudo             : Execute cmd on remote as root user
@@ -528,10 +534,6 @@ hostout.supervisor_
   commandline
 
 
-.. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
-.. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
-
-
 
 
 Why hostout
@@ -544,7 +546,7 @@ Compared to
 
 SilverLining
  Hostout allows you to deploy many different kinds of applications instead of just wsgi based
- python apps. Buildout lets you define the installation of alomost any kind of application.
+ python apps. Buildout lets you define the installation of almost any kind of application.
  
 Puppet
  TODO
@@ -616,10 +618,13 @@ Dylan Jay ( software at pretaweb_ dot com )
 
 
 .. _recipe: http://pypi.python.org/pypi/zc.buildout#recipes
-.. _fabric: http://fabfile.org
 .. _Fabric: http://fabfile.org
 .. _buildout: http://www.buildout.org
 .. _pretaweb: http://www.pretaweb.com
+.. _supervisord: http://supervisord.org/
+.. _libcloud: http://incubator.apache.org/libcloud/
+.. _hostout.cloud: http://pypi.python.org/pypi/hostout.cloud
+.. _hostout.supervisor: http://pypi.python.org/pypi/hostout.supervisor
 
 
 

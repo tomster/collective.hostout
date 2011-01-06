@@ -1,21 +1,25 @@
 Todo list
 *********
 
+- ask the user before doing any bootstrap operation
+
+- don't require sudo-parts or any other sudo command on a normal deploy. Deploy only via key
+
 - import fabfiles so they don't produce warnings
 
 - fix bug that packages every egg during hostout
 
 - fix tests
 
-- move ubuntu redhat etc into collective.hostout. Enable ability to detect hostos.
+- [DONE] move ubuntu redhat etc into collective.hostout. Enable ability to detect hostos.
 
 - make a more explicit commandline (argsparse). make more similar to fabric cl
 
 - optionally use rsync for buildout and include files. This will make django deployment usable.
 
-- finish bootstrap from source that works on any kind of linux
+- [DONE] finish bootstrap from source that works on any kind of linux
 
-- use decorators for picking user for commands instead of initcommand hack. new fabric should help here
+- [DONE] use decorators for picking user for commands instead of initcommand hack. new fabric should help here
 
 - make generic init.d installer so hostout.supervisor can use this
 

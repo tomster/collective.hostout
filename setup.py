@@ -24,9 +24,7 @@ setup(
     version = "1.0a4",
     author = "Dylan Jay",
     author_email = "software@pretaweb.com",
-    description = """collective.hostout will help you control multiple application environments
-    with the minimum amount of effort. You can manage local, staging and deployment environments
-    with one easy tool.""",
+    description = """standardized deployment of zc.buildout based applications with Fabric""",
     license = "GPL",
     keywords = "buildout, fabric, deploy, deployment, server, plone, django, host, hosting",
     classifiers = [
