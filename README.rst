@@ -580,12 +580,12 @@ python interpretters.
 ... python = python26
 ...
 ... [python26]
-... executalble = /path/to/your/python2.6/binary
+... executable = /path/to/your/python2.6/binary
 ...
 ... """ )
 
-or alternatively if you don't want to use your local python you can get buildoit to
-build it for you.
+or alternatively if you don't want to use your local python you can get
+buildout to build it for you.
 
 
 >>> write('buildout.cfg',
