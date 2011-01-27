@@ -111,8 +111,9 @@ class Recipe:
                 egg = extension.split(':')[0]
                 
                 main = self.buildout['buildout']['hostout-main']
-                mainpart = self.buildout[main]
-                mainpart['eggs'] = '\n'.join(mainpart.get('eggs','').split() + [egg])
+                mainpart = self.buildout.get(main)
+                if mainpart:
+                    mainpart['eggs'] = '\n'.join(mainpart.get('eggs','').split() + [egg])
 
                 continue
             else:
