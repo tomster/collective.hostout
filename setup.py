@@ -26,12 +26,12 @@ setup(
     author_email = "software@pretaweb.com",
     description = """standardized deployment of zc.buildout based applications with Fabric""",
     license = "GPL",
-    keywords = "buildout, fabric, deploy, deployment, server, plone, django, host, hosting",
+    keywords = "buildout, zc.buildout, fabric, deploy, deployment, server, plone, django, host, hosting",
     classifiers = [
         'Framework :: Buildout',
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",],
-    url='https://svn.plone.org/svn/collective/'+name,
+    url='http://github.com/collective/'+name,
     long_description=(
         read('README.rst')
         + '\n' +
