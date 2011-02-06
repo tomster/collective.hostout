@@ -259,66 +259,6 @@ def bootstrap_buildout():
         api.sudo('%s bootstrap.py --distribute' % python)
 
 
-def bootstrap_python_buildout():
-    "Install python from source via buildout"
-    
-    #TODO: need a better way to install from source that doesn't need svn or python
-    
-    path = api.env.path
-
-    BUILDOUT = """
-[buildout]
-extends =
-      src/base.cfg
-      src/readline.cfg
-      src/libjpeg.cfg
-      src/python%(majorshort)s.cfg
-      src/links.cfg
-
-parts =
-      ${buildout:base-parts}
-      ${buildout:readline-parts}
-      ${buildout:libjpeg-parts}
-      ${buildout:python%(majorshort)s-parts}
-      ${buildout:links-parts}
-
-# ucs4 is needed as lots of eggs like lxml are also compiled with ucs4 since most linux distros compile with this      
-[python-%(major)s-build:default]
-extra_options +=
-    --enable-unicode=ucs4
-      
-"""
-    
-    hostout = api.env.hostout
-    hostout = api.env.get('hostout')
-    buildout = api.env['buildout-user']
-    effective = api.env['effective-user']
-    buildoutgroup = api.env['buildout-group']
-
-    #hostout.setupusers()
-    api.sudo('mkdir -p %(path)s' % locals())
-    hostout.setowners()
-
-    version = api.env['python-version']
-    major = '.'.join(version.split('.')[:2])
-    majorshort = major.replace('.','')
-    api.sudo('mkdir -p /var/buildout-python')
-    with cd('/var/buildout-python'):
-        #api.sudo('wget http://www.python.org/ftp/python/%(major)s/Python-%(major)s.tgz'%locals())
-        #api.sudo('tar xfz Python-%(major)s.tgz;cd Python-%(major)s;./configure;make;make install'%locals())
-
-        api.sudo('svn co http://svn.plone.org/svn/collective/buildout/python/')
-        with cd('python'):
-            api.sudo('curl -O http://python-distribute.org/distribute_setup.py')
-            api.sudo('python distribute_setup.py')
-            api.sudo('python bootstrap.py --distribute')
-            append(BUILDOUT%locals(), 'buildout.cfg', use_sudo=True)
-            api.sudo('bin/buildout')
-    api.env['python'] = "source /var/buildout-python/python/python-%(major)s/bin/activate; python "
-        
-    #ensure bootstrap files have correct owners
-    hostout.setowners()
-
 def bootstrap_python():
     version = api.env['python-version']
     major = '.'.join(version.split('.')[:2])
